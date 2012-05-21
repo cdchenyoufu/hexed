@@ -21,12 +21,20 @@ Private Function WndProc(ByVal hWnd As Long, ByVal Msg As Long, _
     Dim Control As HexEd
     Dim wnd As Long
     
+    On Error Resume Next
+    
     wnd = GetProp(hWnd, "Wnd")
     lPrevWndProc = GetProp(hWnd, "OldProc")
     
     Select Case wnd
         Case 1 'user ctrl
              Set Control = Controls.Item("hwnd" & hWnd)
+             
+             If Control Is Nothing Then
+                Debug.Print "hwnd: " & hWnd & " was expected to be a Control but wasnt registered? ignoring..."
+                Exit Function
+             End If
+             
              Select Case Msg
                  Case wm_MouseWheel
                      high = (wParam And &HFFFF0000) \ &H10000
@@ -34,13 +42,14 @@ Private Function WndProc(ByVal hWnd As Long, ByVal Msg As Long, _
                      high = high / 120
                      Control.Scroll high
                      
-                     Debug.Print "MSWHEEL_ROLLMSG  " & hWnd & "   " & high & "  " & low & "   " & lParam & "      " & wParam
+                     'Debug.Print "MSWHEEL_ROLLMSG  " & hWnd & "   " & high & "  " & low & "   " & lParam & "      " & wParam
                      Msg = 0
                      WndProc = 10 'CallWindowProc(lPrevWndProc, hWnd, Msg, wParam, lParam)
                      Exit Function
                 Case Else
-                    Debug.Print "other  " & Msg & "   " & hWnd & "   " & high & "  " & low & "   " & lParam
+                    'Debug.Print "other  " & Msg & "   " & hWnd & "   " & high & "  " & low & "   " & lParam
             End Select
+            
         Case 2, 3 'canvas , ascii
             Select Case Msg
                 Case wm_KeyPress
@@ -48,6 +57,7 @@ Private Function WndProc(ByVal hWnd As Long, ByVal Msg As Long, _
 
                     End Select
             End Select
+            
     End Select
    
    WndProc = CallWindowProc(lPrevWndProc, hWnd, Msg, wParam, lParam)

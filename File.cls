@@ -23,8 +23,6 @@ Private Chunk2 As Chunk
 Private ReSized As Boolean
 Public size As Long
 
-
-
 Public Property Get Filename() As String
     Filename = mFilename
 End Property
@@ -33,6 +31,35 @@ Private Sub Class_Initialize()
    ' Set Chunks = New Collection
     mLoaded = False
     ReSized = False
+End Sub
+
+Public Sub LoadFromMemory(bArray As Variant)
+    'dzzie chunk size const doesnt matter cause we load whatever length is
+    'passed to us as one chunk regardless..
+    
+    Dim b() As Byte
+    Dim ch As Chunk
+    
+    If TypeName(bArray) <> "Byte()" Then
+        MsgBox "File.LoadFromMemory wrong data type to load!", vbExclamation
+        Exit Sub
+    End If
+    
+    mLoaded = True
+    ReSized = False
+    
+    b() = bArray
+    ReDim Chunks(1)
+    Set ch = New Chunk
+    ch.LoadFromMemory bArray
+    ch.Offset = 0
+    ch.size = UBound(b) + 1
+    ch.Index = 1
+    size = UBound(b)
+    
+    Set Chunks(1) = ch
+    Set Chunk1 = ch
+    
 End Sub
 
 Public Sub Load(Filename As String)
@@ -356,7 +383,7 @@ Private Sub SaveReSized()
     frmProgress.pb.Min = 1
     frmProgress.pb.Max = UBound(Chunks)
     Screen.MousePointer = vbHourglass
-    NewFilename = App.Path & "\resized.tmp"
+    NewFilename = App.path & "\resized.tmp"
     Kill NewFilename
     Err.Clear
     

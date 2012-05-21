@@ -135,6 +135,12 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 
+Private Declare Function GetTempFileName Lib "kernel32" _
+ Alias "GetTempFileNameA" (ByVal lpszPath As String, _
+ ByVal lpPrefixString As String, ByVal wUnique As Long, _
+ ByVal lpTempFileName As String) As Long
+
+
 Dim CharSet(255) As Byte        'charset filter
 Dim HexLookup(255) As String
 Dim mEditMode As Long           'edit mode , hex / ascii
@@ -185,8 +191,26 @@ Public Event RightClick()
 Private DrawCount As Long
 Private KeyCount As Long
 
+'dzzie
+'------------------
+Public ReadOnly As Boolean
+Public ForceMemOnlyLoading As Boolean
 
+Private mLoadedFile As String
 
+Property Get LoadedFile() As String
+    LoadedFile = mLoadedFile
+End Property
+
+Property Get ReadChunkSize() As Long
+    ReadChunkSize = ChunkSize
+End Property
+
+Property Let ReadChunkSize(v As Long)
+    ChunkSize = v + 1
+End Property
+    
+'------------------
 
 Public Property Let Columns(vData As Long)
     If vData < 1 Then vData = 1
@@ -307,7 +331,7 @@ End Sub
 Private Sub ScrollDown()
     If vScroll.Value < vScroll.Max Then
         
-        If mSelEnd <= mFileHandler.Size - mColumns Then
+        If mSelEnd <= mFileHandler.size - mColumns Then
             mSelEnd = mSelEnd + mColumns
         End If
         vScroll.Value = vScroll.Value + 1
@@ -400,6 +424,8 @@ End Sub
 
 Private Sub Canvas_KeyPress(KeyAscii As Integer)
 
+    If ReadOnly Then Exit Sub
+    
     KeyAscii = Asc(LCase(Chr(KeyAscii)))
     Dim Value As Byte
     
@@ -427,7 +453,9 @@ Private Sub Canvas_KeyPress(KeyAscii As Integer)
 End Sub
 
 Private Sub Ascii_KeyPress(KeyAscii As Integer)
-
+    
+    If ReadOnly Then Exit Sub
+    
     Dim Value As Byte
     If KeyAscii = vbKeyBack Then
         KeyAscii = 0
@@ -636,6 +664,7 @@ End Sub
 Private Sub UserControl_Initialize()
     Dim i As Long
     
+    ChunkSize = 30000
     Call InitCharset
 
     Set mUndoBuffer = New Collection
@@ -657,14 +686,10 @@ Private Sub UserControl_Initialize()
     Me.MarginColor = vbBlack
     Me.ModColor = vbRed
     
-    
-    
     mPos = 0
     
     mLinenumberSize = 10
     Me.Columns = 16
-    
-
 
 End Sub
 
@@ -1065,7 +1090,7 @@ Private Sub Redraw()
     dcAscii.UpdatePBOX
 End Sub
 
-
+'f2 = bookmark, insert = insert..
 
 Private Sub UserControl_KeyDown(KeyCode As Integer, Shift As Integer)
 
@@ -1100,6 +1125,10 @@ KeyCount = KeyCount + 1
             KeyCode = 0
             SetPos Me.DataLength + 1, Shift
         Case vbKeyInsert
+            If ReadOnly Then
+                MsgBox "File was opened in read only mode"
+                Exit Sub
+            End If
             Dim tmparr() As Byte
             If Shift = 0 Then
                 ReDim tmparr(0)
@@ -1112,6 +1141,10 @@ KeyCount = KeyCount + 1
             mIsDirty = True
             InsertData mSelectedPos, tmparr
         Case vbKeyDelete
+            If ReadOnly Then
+                MsgBox "File was opened in read only mode"
+                Exit Sub
+            End If
             Dim Length As Long
             Dim start As Long
             If mSelStart < mSelEnd Then
@@ -1129,6 +1162,10 @@ KeyCount = KeyCount + 1
                 Call CopyData(Me.SelStart, Me.SelLength)
             End If
         Case vbKeyX
+            If ReadOnly Then
+                MsgBox "File was opened in read only mode"
+                Exit Sub
+            End If
             If Shift = 2 Then
                 Call CopyData(Me.SelStart, Me.SelLength)
                 If mSelStart < mSelEnd Then
@@ -1143,6 +1180,10 @@ KeyCount = KeyCount + 1
                 DeleteData start, Length
             End If
         Case vbKeyV
+            If ReadOnly Then
+                MsgBox "File was opened in read only mode"
+                Exit Sub
+            End If
             If Shift = 2 Then
                 Dim PasteData As String
                 PasteData = Clipboard.GetText(vbCFText)
@@ -1327,7 +1368,12 @@ End Sub
 
 Private Sub DeleteData(ByVal Pos As Long, ByVal Length As Long)
     Dim UB As New UndoBlock
-    
+        
+    If ReadOnly Then
+        MsgBox "File was opened in readonly mode"
+        Exit Sub
+    End If
+            
     mFileHandler.ActivateChunk Pos
     
     UB.Action = undDelete
@@ -1362,7 +1408,7 @@ Public Property Let SelLength(vData As Long)
 End Property
 
 Public Property Get DataLength() As Long
-    DataLength = mFileHandler.Size ' UBound(mData)
+    DataLength = mFileHandler.size ' UBound(mData)
 End Property
 
 Private Sub ExitScrollFocus()
@@ -1373,8 +1419,99 @@ Private Sub ExitScrollFocus()
     End If
 End Sub
 
-Public Sub Load(Filename As String)
-    mFileHandler.Load Filename
+'dzzie
+'------------------
+Public Function LoadString(Data As String, Optional ViewOnly As Boolean = True) As Boolean
+    Dim b() As Byte
+    b() = StrConv(Data, vbFromUnicode, &H409)
+    LoadString = LoadByteArray(b())
+End Function
+
+ 
+Public Function LoadByteArray(bArray As Variant, Optional ViewOnly As Boolean = True) As Boolean
+        
+    If TypeName(bArray) <> "Byte()" Then
+        MsgBox "LoadByteArray Error: argument is not a Byte() Array ", vbInformation
+        Exit Function
+    End If
+    
+    On Error GoTo hell
+    
+    Dim f As Long
+    Dim path As String
+    Dim b() As Byte
+    Dim ch As Chunk
+    
+    b() = bArray
+    ReadOnly = ViewOnly
+    
+    If ForceMemOnlyLoading Then
+        ReadOnly = True
+        ReadChunkSize = UBound(b) + 1
+    End If
+    
+    If ReadOnly And UBound(b) + 1 < ChunkSize Then
+        'just view in memory only no need to create tempfile,
+        'user can reset ChunkSize through ReadChunkSize property to force mem only loading...
+        mFileHandler.LoadFromMemory b()
+        vScroll.Value = 1
+        Me.Columns = Me.Columns
+        Me.SelStart = 0
+        Me.SelLength = 0
+        UserControl.vScroll.Value = 0
+        mIsDirty = False
+        mLoadedFile = Empty
+        Set mUndoBuffer = New Collection
+        Set mBookmarks = New Collection
+        LoadByteArray = True
+        Exit Function
+    End If
+    
+    path = TempFileName(Environ("temp"))
+    
+    f = FreeFile
+    Open path For Binary As f
+    Put f, , b()
+    Close f
+    
+    LoadByteArray = LoadFile(path)
+    Exit Function
+hell:
+End Function
+
+Function FolderExists(path As String) As Boolean
+    If Len(path) = 0 Then Exit Function
+    If Dir(path, vbDirectory) <> "" Then FolderExists = True
+End Function
+
+Function FileExists(path As String) As Boolean
+    On Error GoTo hell
+    Dim tmp As String
+    tmp = path
+    If Len(tmp) = 0 Then Exit Function
+    If Dir(tmp, vbHidden Or vbNormal Or vbReadOnly Or vbSystem) <> "" Then FileExists = True
+    Exit Function
+hell: FileExists = False
+End Function
+
+Private Function TempFileName(sPath As String, Optional prefix As String = "hexed_") As String
+    Dim lUnique As Long, sTempFileName As String
+    If IsEmpty(sPath) Or Not FolderExists(sPath) Then sPath = Environ("temp")
+    If Not FolderExists(sPath) Then sPath = Environ("tmp")
+    lUnique = 0
+    sTempFileName = Space$(100)
+    GetTempFileName sPath, prefix, lUnique, sTempFileName
+    sTempFileName = Mid$(sTempFileName, 1, InStr(sTempFileName, Chr$(0)) - 1)
+    TempFileName = sTempFileName
+End Function
+'------------------
+
+Public Function LoadFile(fPath As String, Optional ViewOnly As Boolean = True) As Boolean
+    On Error GoTo hell
+    
+    ReadOnly = ViewOnly
+    mFileHandler.Load fPath
+    mLoadedFile = fPath
     vScroll.Value = 1
     Me.Columns = Me.Columns
     Me.SelStart = 0
@@ -1383,7 +1520,11 @@ Public Sub Load(Filename As String)
     mIsDirty = False
     Set mUndoBuffer = New Collection
     Set mBookmarks = New Collection
-End Sub
+    LoadFile = True
+    
+    Exit Function
+hell:
+End Function
 
 Public Sub AsciiView()
     Ascii.Visible = True
@@ -1404,9 +1545,16 @@ Public Property Get IsDirty() As Boolean
 End Property
 
 Public Sub Save()
+    
+    If ReadOnly Then
+        MsgBox "File was opened in read only mode"
+        Exit Sub
+    End If
+
     mFileHandler.Save
     mIsDirty = False
     Call draw
+    
 End Sub
 
 Public Property Set Font(vData As StdFont)
@@ -1419,8 +1567,6 @@ Public Property Set Font(vData As StdFont)
     Set Canvas.Font = dcCanvas.Font
     Set Ascii.Font = dcCanvas.Font
 
-    
-    
     Call RefreshSettings
 End Property
 
@@ -1522,13 +1668,13 @@ End Sub
 
 
 Public Function GetData(ByVal Pos As Long) As Byte
-    If Pos > mFileHandler.Size Then Exit Function
+    If Pos > mFileHandler.size Then Exit Function
     mFileHandler.ActivateChunk Pos
     GetData = mFileHandler.Data(Pos)
 End Function
 
 Public Function GetDataChunk(ByVal Pos As Long) As String
-    If Pos > mFileHandler.Size Then Exit Function
+    If Pos > mFileHandler.size Then Exit Function
     mFileHandler.ActivateChunk Pos
     Dim s As String
     s = mFileHandler.DataScreen(Pos, ChunkSize)
@@ -1536,7 +1682,7 @@ Public Function GetDataChunk(ByVal Pos As Long) As String
 End Function
 
 Public Function FileSize() As Long
-    FileSize = mFileHandler.Size
+    FileSize = mFileHandler.size
 End Function
 
 Public Sub ToggleBookmark(ByVal Pos As Long)

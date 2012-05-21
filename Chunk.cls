@@ -16,7 +16,7 @@ Option Explicit
 Public DataName As String
 Public StatusName As String
 Public Filename As String
-Public NewFileName As String
+Public NewFilename As String
 
 Public size As Long
 Private mData() As Byte
@@ -28,11 +28,29 @@ Private mIsDirty As Boolean
 Public Index As Long
 
 Private Sub Class_Initialize()
-    mLoaded = False
-    Offset = 0
-    Filename = "" 'get temp filename
-    size = 0
+   ' mLoaded = False
+   ' Offset = 0
+   ' Filename = "" 'get temp filename
+   ' size = 0
 End Sub
+
+Public Sub LoadFromMemory(bArray As Variant) 'added dzzie for small files in viewer mode
+
+    If TypeName(bArray) <> "Byte()" Then
+        MsgBox "Chunk.LoadFromMemory wrong data type to load!", vbExclamation
+        Exit Sub
+    End If
+    
+    Offset = 0
+    mData() = bArray
+    size = UBound(mData) + 1
+    ReDim mStatus(size)
+    mLoaded = True
+    mInitialized = True
+    mIsDirty = False
+    
+End Sub
+
 
 Public Sub DataScreen(ByVal Index As Long, ByVal Count As Long, ByVal ArrPos As Long, ByRef Fillcount As Long, ByRef buff() As Byte)
     Dim i As Long
@@ -85,9 +103,7 @@ Public Sub Load()
     Dim buffer() As Byte
     Dim id As Long
     id = FreeFile
-    
 
-    
     If mLoaded = True Then Exit Sub
     If mInitialized = False Then
         'this chunk has not been read yet
@@ -143,7 +159,7 @@ Private Function MakeName() As String
         name = name & Chr(Rnd * 20 + 65)
     Next
     name = name & Int(Timer)
-    name = App.Path & "\" & name & ".tmp"
+    name = App.path & "\" & name & ".tmp"
     MakeName = name
 End Function
         
@@ -295,7 +311,7 @@ Public Sub SaveNew()
     Me.Load
     Dim id As Long
     id = FreeFile
-    Open NewFileName For Binary As #id
+    Open NewFilename For Binary As #id
     Put #id, Offset + 1, mData
     Close #id
     Me.UnLoad
