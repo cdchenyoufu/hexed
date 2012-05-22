@@ -22,6 +22,7 @@ Private Chunk1 As Chunk
 Private Chunk2 As Chunk
 Private ReSized As Boolean
 Public size As Long
+Private isMemLoad As Boolean
 
 Public Property Get Filename() As String
     Filename = mFilename
@@ -33,13 +34,26 @@ Private Sub Class_Initialize()
     ReSized = False
 End Sub
 
+Public Function Search(searchFor As String, Optional isUnicode As Boolean = False, Optional caseInsensitive As Boolean = False) As String()
+    Dim cs As New CSearch
+    
+    If isMemLoad Then
+        Search = cs.FromBytes(searchFor, Chunk1.GetDataBytes(), isUnicode, caseInsensitive)
+    Else
+        Search = cs.FromFile(searchFor, mFilename, isUnicode, caseInsensitive)
+    End If
+        
+    Set cs = Nothing
+    
+End Function
+
 Public Sub LoadFromMemory(bArray As Variant)
     'dzzie chunk size const doesnt matter cause we load whatever length is
     'passed to us as one chunk regardless..
     
     Dim b() As Byte
     Dim ch As Chunk
-    
+
     If TypeName(bArray) <> "Byte()" Then
         MsgBox "File.LoadFromMemory wrong data type to load!", vbExclamation
         Exit Sub
@@ -47,12 +61,13 @@ Public Sub LoadFromMemory(bArray As Variant)
     
     mLoaded = True
     ReSized = False
+    isMemLoad = True
     
     b() = bArray
     ReDim Chunks(1)
     Set ch = New Chunk
     ch.LoadFromMemory bArray
-    ch.Offset = 0
+    ch.offset = 0
     ch.size = UBound(b) + 1
     ch.Index = 1
     size = UBound(b)
@@ -76,7 +91,9 @@ Public Sub Load(Filename As String)
         MsgBox "File is too big"
         Exit Sub
     End If
+    
     mFilename = Filename
+    isMemLoad = False
     
     size = FileSize - 1
     NumChunks = Int(size / ChunkSize) + 1
@@ -84,12 +101,12 @@ Public Sub Load(Filename As String)
     For i = 0 To NumChunks - 1
         Set Chunk = New Chunk
         Chunk.Filename = mFilename
-        Chunk.Offset = i * ChunkSize
+        Chunk.offset = i * ChunkSize
         Chunk.size = ChunkSize
         Chunk.Index = i + 1
         Set Chunks(i + 1) = Chunk
     Next
-    Chunks(NumChunks).size = FileSize - Chunks(NumChunks).Offset
+    Chunks(NumChunks).size = FileSize - Chunks(NumChunks).offset
     
     mLoaded = True
     ReSized = False
@@ -103,7 +120,7 @@ Public Sub ActivateChunk(Pos As Long)
     
     
     If Not Chunk1 Is Nothing Then
-        If Pos >= Chunk1.Offset And Pos <= Chunk1.size + Chunk1.Offset - 1 Then
+        If Pos >= Chunk1.offset And Pos <= Chunk1.size + Chunk1.offset - 1 Then
             'chunk already loaded
             Exit Sub
         End If
@@ -137,28 +154,29 @@ Private Function GetChunkFromPos(ByVal Pos As Long) As Long
     Do While Not hit And Upper >= Lower
         Current = Int((Upper + Lower) / 2)
         Set Chunk = Chunks(Current)
-        If Pos >= Chunk.Offset And Pos <= Chunk.Offset + Chunk.size Then
+        If Pos >= Chunk.offset And Pos <= Chunk.offset + Chunk.size Then
             hit = True
             GetChunkFromPos = Current   'return pos
             Exit Function
-        ElseIf Pos > Chunk.Offset + Chunk.size Then
+        ElseIf Pos > Chunk.offset + Chunk.size Then
             Lower = Current + 1
         Else
             Upper = Current - 1
         End If
     Loop
     
+    If GetChunkFromPos = 0 Then GetChunkFromPos = 1 'there is no chunk 0 ever dzzie...
 
 End Function
 
 
 
-Public Property Get Data(ByVal Index As Long) As Byte
+Public Property Get data(ByVal Index As Long) As Byte
     If mLoaded = False Then Exit Property
-    If Index >= Chunk1.Offset And Index <= Chunk1.size + Chunk1.Offset - 1 Then
-        Data = Chunk1.Data(Index)
+    If Index >= Chunk1.offset And Index <= Chunk1.size + Chunk1.offset - 1 Then
+        data = Chunk1.data(Index)
     Else
-        Data = Chunk2.Data(Index)
+        data = Chunk2.data(Index)
     End If
 End Property
 
@@ -167,7 +185,7 @@ Public Function DataScreen(ByVal Index As Long, ByVal Count As Long) As Byte()
     
     Dim buff() As Byte
     Dim Fillcount As Long
-    Dim Offset As Long
+    Dim offset As Long
     'buff
     ReDim buff(Count - 1)
     If mLoaded = False Then
@@ -175,20 +193,20 @@ Public Function DataScreen(ByVal Index As Long, ByVal Count As Long) As Byte()
         DataScreen = buff
         Exit Function
     End If
-    If Index >= Chunk1.Offset And Index <= Chunk1.size + Chunk1.Offset - 1 Then
-        Offset = 0
-        Chunk1.DataScreen Index, Count, Offset, Fillcount, buff()
+    If Index >= Chunk1.offset And Index <= Chunk1.size + Chunk1.offset - 1 Then
+        offset = 0
+        Chunk1.DataScreen Index, Count, offset, Fillcount, buff()
         If Fillcount <> Count Then
             If Not Chunk2 Is Nothing Then
-                Offset = Fillcount
-                Chunk2.DataScreen Chunk2.Offset, Count - Fillcount, Offset, Fillcount, buff()
+                offset = Fillcount
+                Chunk2.DataScreen Chunk2.offset, Count - Fillcount, offset, Fillcount, buff()
             End If
         End If
         DataScreen = buff
     Else
         If Not Chunk2 Is Nothing Then
-            Offset = 0
-            Chunk2.DataScreen Index, Count, Offset, Fillcount, buff()
+            offset = 0
+            Chunk2.DataScreen Index, Count, offset, Fillcount, buff()
         End If
         DataScreen = buff
     End If
@@ -199,7 +217,7 @@ Public Function StatusScreen(ByVal Index As Long, ByVal Count As Long) As Byte()
     
     Dim buff() As Byte
     Dim Fillcount As Long
-    Dim Offset As Long
+    Dim offset As Long
     'buff
     ReDim buff(Count - 1)
     If mLoaded = False Then
@@ -207,37 +225,37 @@ Public Function StatusScreen(ByVal Index As Long, ByVal Count As Long) As Byte()
         StatusScreen = buff
         Exit Function
     End If
-    If Index >= Chunk1.Offset And Index <= Chunk1.size + Chunk1.Offset - 1 Then
-        Offset = 0
-        Chunk1.StatusScreen Index, Count, Offset, Fillcount, buff()
+    If Index >= Chunk1.offset And Index <= Chunk1.size + Chunk1.offset - 1 Then
+        offset = 0
+        Chunk1.StatusScreen Index, Count, offset, Fillcount, buff()
         If Fillcount <> Count Then
             If Not Chunk2 Is Nothing Then
-                Offset = Fillcount
-                Chunk2.StatusScreen Chunk2.Offset, Count - Fillcount, Offset, Fillcount, buff()
+                offset = Fillcount
+                Chunk2.StatusScreen Chunk2.offset, Count - Fillcount, offset, Fillcount, buff()
             End If
         End If
         StatusScreen = buff
     Else
         If Not Chunk2 Is Nothing Then
-            Offset = 0
-            Chunk2.StatusScreen Index, Count, Offset, Fillcount, buff()
+            offset = 0
+            Chunk2.StatusScreen Index, Count, offset, Fillcount, buff()
         End If
         StatusScreen = buff
     End If
 End Function
 
-Public Property Let Data(ByVal Index As Long, vData As Byte)
+Public Property Let data(ByVal Index As Long, vData As Byte)
     If mLoaded = False Then Exit Property
-    If Index >= Chunk1.Offset And Index <= Chunk1.size + Chunk1.Offset - 1 Then
-        Chunk1.Data(Index) = vData
+    If Index >= Chunk1.offset And Index <= Chunk1.size + Chunk1.offset - 1 Then
+        Chunk1.data(Index) = vData
     Else
-        Chunk2.Data(Index) = vData
+        Chunk2.data(Index) = vData
     End If
 End Property
 
 Public Property Get Status(ByVal Index As Long) As Byte
     If mLoaded = False Then Exit Property
-    If Index >= Chunk1.Offset And Index <= Chunk1.size + Chunk1.Offset - 1 Then
+    If Index >= Chunk1.offset And Index <= Chunk1.size + Chunk1.offset - 1 Then
         Status = Chunk1.Status(Index)
     Else
         Status = Chunk2.Status(Index)
@@ -246,7 +264,7 @@ End Property
 
 Public Property Let Status(ByVal Index As Long, vData As Byte)
     If mLoaded = False Then Exit Property
-    If Index >= Chunk1.Offset And Index <= Chunk1.size + Chunk1.Offset - 1 Then
+    If Index >= Chunk1.offset And Index <= Chunk1.size + Chunk1.offset - 1 Then
         Chunk1.Status(Index) = vData
     Else
         Chunk2.Status(Index) = vData
@@ -254,27 +272,27 @@ Public Property Let Status(ByVal Index As Long, vData As Byte)
 End Property
 
 
-Public Sub InsertData(ByVal Index As Long, Data() As Byte)
+Public Sub InsertData(ByVal Index As Long, data() As Byte)
     If mLoaded = False Then Exit Sub
-    If Index >= Chunk1.Offset And Index <= Chunk1.size + Chunk1.Offset - 1 Or Chunk2 Is Nothing Then
-        Chunk1.InsertData Index, Data
+    If Index >= Chunk1.offset And Index <= Chunk1.size + Chunk1.offset - 1 Or Chunk2 Is Nothing Then
+        Chunk1.InsertData Index, data
     Else
-        Chunk2.InsertData Index, Data
+        Chunk2.InsertData Index, data
     End If
     Call FixOffsets
-    size = size + UBound(Data) + 1
+    size = size + UBound(data) + 1
     ReSized = True
 End Sub
 
-Public Sub InsertDataStatus(ByVal Index As Long, Data() As Byte, Status() As Byte)
+Public Sub InsertDataStatus(ByVal Index As Long, data() As Byte, Status() As Byte)
     If mLoaded = False Then Exit Sub
-    If Index >= Chunk1.Offset And Index <= Chunk1.size + Chunk1.Offset - 1 Or Chunk2 Is Nothing Then
-        Chunk1.InsertDataStatus Index, Data, Status
+    If Index >= Chunk1.offset And Index <= Chunk1.size + Chunk1.offset - 1 Or Chunk2 Is Nothing Then
+        Chunk1.InsertDataStatus Index, data, Status
     Else
-        Chunk2.InsertDataStatus Index, Data, Status
+        Chunk2.InsertDataStatus Index, data, Status
     End If
     Call FixOffsets
-    size = size + UBound(Data) + 1
+    size = size + UBound(data) + 1
     ReSized = True
 End Sub
 
@@ -294,33 +312,33 @@ Public Sub DeleteData(ByVal Index As Long, ByVal Length As Long)
     If size < 0 Then Exit Sub
     
     If mLoaded = False Then Exit Sub
-    If Index >= Chunk1.Offset And Index <= Chunk1.size + Chunk1.Offset - 1 Then
-        If (Index + Length - 1) > (Chunk1.Offset + Chunk1.size - 1) Then
+    If Index >= Chunk1.offset And Index <= Chunk1.size + Chunk1.offset - 1 Then
+        If (Index + Length - 1) > (Chunk1.offset + Chunk1.size - 1) Then
             LastChunkID = GetChunkFromPos(Index + Length - 1)
             '//lastchunk is the chunk that SELEND is located in
             Set LastChunk = Chunks(LastChunkID)
             'pos 7520 +14
     
-            Length1 = (Chunk1.Offset + Chunk1.size) - Index
+            Length1 = (Chunk1.offset + Chunk1.size) - Index
             Chunk1.DeleteData Index, Length1
             
             If LastChunk.Index = Chunk1.Index + 1 Then
                 'overlapping one block only  - seems to work fine now =)
                 Length2 = Length - Length1
-                Chunk2.DeleteData Chunk2.Offset, Length2
+                Chunk2.DeleteData Chunk2.offset, Length2
                         
             Else
                 'overlapping multiple blocks
                 For i = Chunk1.Index + 1 To LastChunk.Index - 1
                     Set tmpChunk = Chunks(i)
                     Length3 = Length3 + tmpChunk.size
-                    tmpChunk.DeleteData tmpChunk.Offset, tmpChunk.size
+                    tmpChunk.DeleteData tmpChunk.offset, tmpChunk.size
                 Next
                 
                 Length2 = (Length - Length3) - Length1
                 
                 MsgBox "ohoj!!" & Length2
-                LastChunk.DeleteData LastChunk.Offset, Length2
+                LastChunk.DeleteData LastChunk.offset, Length2
                 
             End If
         Else
@@ -338,13 +356,13 @@ Public Sub DeleteData(ByVal Index As Long, ByVal Length As Long)
 End Sub
 
 Private Sub FixOffsets()
-    Dim Offset As Long
+    Dim offset As Long
     Dim Chunk As Chunk
     Dim i As Long
     For i = 1 To UBound(Chunks)
         Set Chunk = Chunks(i)
-        Chunk.Offset = Offset
-        Offset = Chunk.Offset + Chunk.size
+        Chunk.offset = offset
+        offset = Chunk.offset + Chunk.size
     Next
 End Sub
 
@@ -388,7 +406,7 @@ Private Sub SaveReSized()
     Err.Clear
     
     For i = 1 To UBound(Chunks)
-        frmProgress.pb.Value = i
+        frmProgress.pb.value = i
         Call Chunks(i).UnLoad
         Chunks(i).NewFilename = NewFilename
         Chunks(i).SaveNew

@@ -29,6 +29,12 @@ Begin VB.Form frmEditor
       Begin VB.Menu mnuSave 
          Caption         =   "Save"
       End
+      Begin VB.Menu mnuSearch 
+         Caption         =   "Search"
+      End
+      Begin VB.Menu mnuAbout 
+         Caption         =   "About"
+      End
    End
 End
 Attribute VB_Name = "frmEditor"
@@ -37,9 +43,7 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
-Public key As String
-Public Filename As String
-Public title As String
+'todo: copy inserts 0x03..have to kill that..
 
 Private Sub Form_Activate()
     Me.HexEditor.SetFocus
@@ -50,24 +54,14 @@ Private Sub Form_GotFocus()
 End Sub
 
 Private Sub Form_Load()
-    
-    Dim b() As Byte
-    b() = StrConv(String(50, "A"), vbFromUnicode, &H409)
-    
-    'if you want to force it to load from memory only set chunksize = datasize + 1
-    'else it will create a temp file for you automatically...
-    'HexEditor.ReadChunkSize = &H50000
-    HexEditor.ForceMemOnlyLoading = True
-    Me.HexEditor.LoadString (String(&H50000, "B"))
-    
-    Me.Visible = True
-    
+   Me.Visible = True
+   mnuOpen.Visible = isIDE()
 End Sub
 
 Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
     Dim answer As Long
     If Not HexEditor.ReadOnly And Me.HexEditor.IsDirty Then
-        answer = MsgBox("Save changes to " & Me.title & " ?", vbYesNoCancel Or vbExclamation, "VB Hexedit")
+        answer = MsgBox("Save changes?", vbYesNoCancel Or vbExclamation, "VB Hexedit")
         If answer = vbYes Then Me.HexEditor.Save
     End If
 End Sub
@@ -79,9 +73,23 @@ Private Sub Form_Resize()
 End Sub
 
 Private Sub HexEditor_Dirty()
-    Me.Caption = Me.title & "  *"
+    'Me.Caption = Me.title & "  *"
 End Sub
 
 Private Sub HexEditor_RightClick()
-   PopupMenu mnuFile
+    'mnuOpen.Visible = Not HexEditor.ReadOnly
+    mnuSave.Visible = Not HexEditor.ReadOnly
+    PopupMenu mnuFile
+End Sub
+
+Private Sub mnuAbout_Click()
+    HexEditor.ShowAbout
+End Sub
+
+Private Sub mnuOpen_Click()
+    HexEditor.ShowOpen
+End Sub
+
+Private Sub mnuSearch_Click()
+     HexEditor.ShowFind
 End Sub

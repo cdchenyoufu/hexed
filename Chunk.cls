@@ -22,7 +22,7 @@ Public size As Long
 Private mData() As Byte
 Private mStatus() As Byte
 Private mLoaded As Boolean
-Public Offset As Long
+Public offset As Long
 Private mInitialized As Boolean
 Private mIsDirty As Boolean
 Public Index As Long
@@ -34,6 +34,10 @@ Private Sub Class_Initialize()
    ' size = 0
 End Sub
 
+Public Function GetDataBytes() As Variant 'as byte()
+    GetDataBytes = mData()
+End Function
+
 Public Sub LoadFromMemory(bArray As Variant) 'added dzzie for small files in viewer mode
 
     If TypeName(bArray) <> "Byte()" Then
@@ -41,7 +45,7 @@ Public Sub LoadFromMemory(bArray As Variant) 'added dzzie for small files in vie
         Exit Sub
     End If
     
-    Offset = 0
+    offset = 0
     mData() = bArray
     size = UBound(mData) + 1
     ReDim mStatus(size)
@@ -56,10 +60,10 @@ Public Sub DataScreen(ByVal Index As Long, ByVal Count As Long, ByVal ArrPos As 
     Dim i As Long
     Dim j As Long
     Dim Max As Long
-    j = Index - Offset
+    j = Index - offset
     Max = Count - 1
-    If Index + Count > Me.Offset + Me.size Then
-        Max = Me.Offset + Me.size - Index - 1
+    If Index + Count > Me.offset + Me.size Then
+        Max = Me.offset + Me.size - Index - 1
     End If
     For i = 0 To Max
         buff(i + ArrPos) = mData(j + i)
@@ -71,10 +75,10 @@ Public Sub StatusScreen(ByVal Index As Long, ByVal Count As Long, ByVal ArrPos A
     Dim i As Long
     Dim j As Long
     Dim Max As Long
-    j = Index - Offset
+    j = Index - offset
     Max = Count - 1
-    If Index + Count > Me.Offset + Me.size Then
-        Max = Me.Offset + Me.size - Index - 1
+    If Index + Count > Me.offset + Me.size Then
+        Max = Me.offset + Me.size - Index - 1
     End If
     For i = 0 To Max
         buff(i + ArrPos) = mStatus(j + i)
@@ -82,21 +86,21 @@ Public Sub StatusScreen(ByVal Index As Long, ByVal Count As Long, ByVal ArrPos A
     Fillcount = Max + 1
 End Sub
 
-Public Property Get Data(ByVal Index As Long) As Byte
-    Data = mData(Index - Offset)
+Public Property Get data(ByVal Index As Long) As Byte
+    data = mData(Index - offset)
 End Property
 
-Public Property Let Data(ByVal Index As Long, vData As Byte)
-    mData(Index - Offset) = vData
+Public Property Let data(ByVal Index As Long, vData As Byte)
+    mData(Index - offset) = vData
     mIsDirty = True
 End Property
 
 Public Property Get Status(ByVal Index As Long) As Byte
-    Status = mStatus(Index - Offset)
+    Status = mStatus(Index - offset)
 End Property
 
 Public Property Let Status(ByVal Index As Long, vData As Byte)
-    mStatus(Index - Offset) = vData
+    mStatus(Index - offset) = vData
 End Property
 
 Public Sub Load()
@@ -109,7 +113,7 @@ Public Sub Load()
         'this chunk has not been read yet
             ReDim buffer(size - 1)
             Open Filename For Binary As #id
-            Get #id, Offset + 1, buffer
+            Get #id, offset + 1, buffer
             Close #id
             
          '   MsgBox UBound(buffer)
@@ -196,7 +200,7 @@ Private Sub Class_Terminate()
 End Sub
 
 
-Public Sub InsertData(ByVal Pos As Long, Data() As Byte)
+Public Sub InsertData(ByVal Pos As Long, data() As Byte)
     Dim tmp As String
     Dim ltmp As String
     Dim rtmp As String
@@ -209,7 +213,7 @@ Public Sub InsertData(ByVal Pos As Long, Data() As Byte)
     
     If UBound(mData) = -1 Then
         'if chunk is empty ... replace it with this data
-        mData = Data
+        mData = data
         insertstatus = String(UBound(mData) + 1, Chr(1))
         mStatus = StrConv(insertstatus, vbFromUnicode)
         mIsDirty = True
@@ -218,9 +222,9 @@ Public Sub InsertData(ByVal Pos As Long, Data() As Byte)
     End If
     
     
-    Pos = Pos - Offset
+    Pos = Pos - offset
 
-    insert = StrConv(Data(), vbUnicode)
+    insert = StrConv(data(), vbUnicode)
     tmp = StrConv(mData, vbUnicode)
     ltmp = Mid(tmp, 1, Pos)
     rtmp = Mid(tmp, Pos + 1)
@@ -236,18 +240,18 @@ Public Sub InsertData(ByVal Pos As Long, Data() As Byte)
     mIsDirty = True
     
     'increase chunksize
-    size = size + UBound(Data) + 1
+    size = size + UBound(data) + 1
 End Sub
 
-Public Sub InsertDataStatus(ByVal Pos As Long, Data() As Byte, Status() As Byte)
+Public Sub InsertDataStatus(ByVal Pos As Long, data() As Byte, Status() As Byte)
     Dim tmp As String
     Dim ltmp As String
     Dim rtmp As String
     Dim insert As String
     Dim insertstatus As String
-    Pos = Pos - Offset
+    Pos = Pos - offset
 
-    insert = StrConv(Data(), vbUnicode)
+    insert = StrConv(data(), vbUnicode)
     tmp = StrConv(mData, vbUnicode)
     ltmp = Mid(tmp, 1, Pos)
     rtmp = Mid(tmp, Pos + 1)
@@ -263,7 +267,7 @@ Public Sub InsertDataStatus(ByVal Pos As Long, Data() As Byte, Status() As Byte)
     mIsDirty = True
     
     'increase chunksize
-    size = size + UBound(Data) + 1
+    size = size + UBound(data) + 1
 End Sub
 
 
@@ -273,7 +277,7 @@ Public Sub DeleteData(ByVal Pos As Long, ByVal Length As Long)
     Dim rtmp As String
     Dim insert As String
     Dim insertstatus As String
-    Pos = Pos - Offset
+    Pos = Pos - offset
 
     If Pos - 1 + Length > size Then Exit Sub
 
@@ -302,7 +306,7 @@ Public Sub Save()
     Dim id As Long
     id = FreeFile
     Open Filename For Binary As #id
-    Put #id, Offset + 1, mData
+    Put #id, offset + 1, mData
     Close #id
     Me.UnLoad
 End Sub
@@ -312,7 +316,7 @@ Public Sub SaveNew()
     Dim id As Long
     id = FreeFile
     Open NewFilename For Binary As #id
-    Put #id, Offset + 1, mData
+    Put #id, offset + 1, mData
     Close #id
     Me.UnLoad
 End Sub

@@ -210,6 +210,28 @@ Property Let ReadChunkSize(v As Long)
     ChunkSize = v + 1
 End Property
     
+Public Function ShowOpen(Optional initDir As String, Optional ViewOnly As Boolean = False) As Boolean
+    Dim dlg As New clsCmnDlg2
+    Dim fpath As String
+    fpath = dlg.OpenDialog(AllFiles, initDir, "Open file", UserControl.hWnd)
+    If Len(fpath) = 0 Then Exit Function
+    ShowOpen = Me.LoadFile(fpath, ViewOnly)
+End Function
+
+Public Function ShowAbout()
+    frmAbout.Show
+End Function
+
+Public Function Search(match As String, Optional isUnicode As Boolean = False, Optional caseSensitive As Boolean = False) As String()
+        'this doesnt really do the rest of the library justice just my cheese implementation..dz
+        Search = mFileHandler.Search(match, isUnicode, caseSensitive)
+End Function
+
+Public Sub ShowFind()
+    Set frmFind.owner = Me
+    frmFind.Visible = True
+End Sub
+
 '------------------
 
 Public Property Let Columns(vData As Long)
@@ -433,13 +455,13 @@ Private Sub Canvas_KeyPress(KeyAscii As Integer)
     
     If InStr("0123456789abcdef", Chr(KeyAscii)) Then
         If mSelectedCursorPos = 0 Then
-            Value = mFileHandler.Data(mSelectedPos)
+            Value = mFileHandler.data(mSelectedPos)
             Value = Value And &HF
             Value = Value Or (val("&h" & Chr(KeyAscii)) * 16)
             ChangeData Value, mSelectedPos
             SetPos mSelectedPos, 0, 1
         Else
-            Value = mFileHandler.Data(mSelectedPos)
+            Value = mFileHandler.data(mSelectedPos)
             Value = Value And &HF0
             Value = Value Or (val("&h" & Chr(KeyAscii)))
             ChangeData Value, mSelectedPos
@@ -460,7 +482,7 @@ Private Sub Ascii_KeyPress(KeyAscii As Integer)
     If KeyAscii = vbKeyBack Then
         KeyAscii = 0
     Else
-         Value = mFileHandler.Data(mSelectedPos)
+         Value = mFileHandler.data(mSelectedPos)
          ChangeData KeyAscii, mSelectedPos
          SetPos mSelectedPos + 1, 0
     End If
@@ -723,7 +745,7 @@ Private Sub DrawNormal()
     Dim i As Long                   'counter (outer loop)
     Dim j As Long                   'counter (inner loop)
     Dim Pos As Long                 'pos in the file
-    Dim Data As String              'temp var for hexvalues
+    Dim data As String              'temp var for hexvalues
     Dim HexLine As String           'templine with even column hex data
     Dim OddHexline As String        'templine with odd column hex data
     Dim AsciiLine As String         'temp line with Ascii data
@@ -809,20 +831,20 @@ Private Sub DrawNormal()
                 Exit For
             End If
             
-            Data = HexLookup((buff(BuffPos)))
+            data = HexLookup((buff(BuffPos)))
             
             If StatusBuff(BuffPos) = 1 Then
                 'do if modified
-                Mid(DiffLine, j * 3 + 1, 2) = Data
+                Mid(DiffLine, j * 3 + 1, 2) = data
                 Mid(DiffAsciiLine, j + 1, 1) = Chr(CharSet(buff(BuffPos)))
                 modLine = True
                 
             Else
                 'do if not modified
                 If (j + 1) Mod 2 Then
-                    Mid(OddHexline, j * 3 + 1, 2) = Data
+                    Mid(OddHexline, j * 3 + 1, 2) = data
                 Else
-                    Mid(HexLine, j * 3 + 1, 2) = Data
+                    Mid(HexLine, j * 3 + 1, 2) = data
                 End If
                 Mid(AsciiLine, j + 1, 1) = Chr(CharSet(buff(BuffPos)))
             End If
@@ -866,7 +888,7 @@ Private Sub DrawModified()
     Dim i As Long
     Dim j As Long
     Dim Pos As Long
-    Dim Data As String
+    Dim data As String
     Dim HexLine As String
     Dim AsciiLine As String
     Dim CaretX As Long
@@ -903,11 +925,11 @@ Private Sub DrawModified()
             End If
             
             If mFileHandler.Status(Pos) = 1 Then
-                Data = HexLookup(mFileHandler.Data(Pos))
+                data = HexLookup(mFileHandler.data(Pos))
                 'If Len(Data) = 1 Then Data = "0" & Data
                 
-                HexLine = HexLine & Data & " "
-                AsciiLine = AsciiLine & Chr(CharSet(mFileHandler.Data(Pos)))
+                HexLine = HexLine & data & " "
+                AsciiLine = AsciiLine & Chr(CharSet(mFileHandler.data(Pos)))
                 modLine = True
             Else
                 HexLine = HexLine & "   "
@@ -928,7 +950,7 @@ Private Sub DrawCursors()
     Dim y As Currency
     Dim xx As Long
     Dim Pos As Long
-    Dim Data As String
+    Dim data As String
     Dim CanvasOffset As Long
     Dim AsciiOffset As Long
         
@@ -947,7 +969,7 @@ Private Sub DrawCursors()
         If y < 0 Then y = 0
         If y > Canvas.ScaleHeight Then y = Canvas.ScaleHeight
         
-        If Len(Data) = 1 Then Data = "0" & Data
+        If Len(data) = 1 Then data = "0" & data
         
         If mEditMode = 0 Then
             dcCanvas.FillArea x + 8 + mSelectedCursorPos * mAsciiWidth, y, x + 8 + mSelectedCursorPos * mAsciiWidth + 2, y + mLineHeight, vbBlack
@@ -965,7 +987,7 @@ Private Sub DrawBookmarks()
     Dim y As Currency
     Dim xx As Long
     Dim Pos As Long
-    Dim Data As String
+    Dim data As String
     Dim CanvasOffset As Long
     Dim AsciiOffset As Long
     Dim bm As Bookmark
@@ -983,7 +1005,7 @@ Private Sub DrawBookmarks()
         If y < 0 Then y = 0
         If y > Canvas.ScaleHeight Then y = Canvas.ScaleHeight
         
-        If Len(Data) = 1 Then Data = "0" & Data
+        If Len(data) = 1 Then data = "0" & data
         
         
         dcCanvas.FillArea x + 4, y, x + 4 + mHexWidth, y + mLineHeight, vbBlack
@@ -1191,6 +1213,14 @@ KeyCount = KeyCount + 1
                 mIsDirty = True
                 InsertData mSelectedPos, tmparr
             End If
+        Case vbKeyO
+            If ReadOnly Then
+                'MsgBox "File was opened in read only mode"
+                Exit Sub
+            End If
+            If Shift = 2 Then
+                
+            End If
     End Select
 End Sub
 
@@ -1280,16 +1310,16 @@ Private Sub ChangeData(ByVal Value As Byte, ByVal Pos As Long)
     UB.Action = undEdit
     UB.Pos = Pos
     UB.Status = mFileHandler.Status(Pos)
-    UB.Value = mFileHandler.Data(Pos)
+    UB.Value = mFileHandler.data(Pos)
     
     AddToUndobuffer UB
     
     'store value and mark the byte as modified
-    If mFileHandler.Data(Pos) <> Value Then
+    If mFileHandler.data(Pos) <> Value Then
         'only set as modified if byte differs
         mFileHandler.Status(Pos) = 1
     End If
-    mFileHandler.Data(Pos) = Value
+    mFileHandler.data(Pos) = Value
     If Not mIsDirty Then
         RaiseEvent Dirty
         mIsDirty = True 'we have changed some data , the file is now dirty..
@@ -1314,7 +1344,7 @@ Public Sub DoUndo()
     
     Select Case UB.Action
         Case undEdit
-            mFileHandler.Data(UB.Pos) = UB.Value
+            mFileHandler.data(UB.Pos) = UB.Value
             mFileHandler.Status(UB.Pos) = UB.Status
             SetPos UB.Pos, 0
             
@@ -1330,8 +1360,6 @@ Public Sub DoUndo()
     Call draw
     
 End Sub
-
-
 
 Private Sub GetXYfromPos(ByRef Pos, ByRef x As Currency, ByRef y As Currency)
   y = Pos \ Columns
@@ -1353,16 +1381,16 @@ Private Sub CopyData(ByVal Pos As Long, ByVal Length As Long)
     Clipboard.SetText str, vbCFText
 End Sub
 
-Private Sub InsertData(ByVal Pos As Long, Data() As Byte)
+Private Sub InsertData(ByVal Pos As Long, data() As Byte)
     Dim UB As New UndoBlock
     UB.Action = undInsert
     UB.Pos = Pos
     UB.Status = ""
     UB.Value = ""
-    UB.Custom = UBound(Data) + 1    'store length
+    UB.Custom = UBound(data) + 1    'store length
     
     AddToUndobuffer UB
-    mFileHandler.InsertData Pos, Data
+    mFileHandler.InsertData Pos, data
     Columns = Columns
 End Sub
 
@@ -1421,9 +1449,9 @@ End Sub
 
 'dzzie
 '------------------
-Public Function LoadString(Data As String, Optional ViewOnly As Boolean = True) As Boolean
+Public Function LoadString(data As String, Optional ViewOnly As Boolean = True) As Boolean
     Dim b() As Byte
-    b() = StrConv(Data, vbFromUnicode, &H409)
+    b() = StrConv(data, vbFromUnicode, &H409)
     LoadString = LoadByteArray(b())
 End Function
 
@@ -1506,12 +1534,12 @@ Private Function TempFileName(sPath As String, Optional prefix As String = "hexe
 End Function
 '------------------
 
-Public Function LoadFile(fPath As String, Optional ViewOnly As Boolean = True) As Boolean
+Public Function LoadFile(fpath As String, Optional ViewOnly As Boolean = True) As Boolean
     On Error GoTo hell
     
     ReadOnly = ViewOnly
-    mFileHandler.Load fPath
-    mLoadedFile = fPath
+    mFileHandler.Load fpath
+    mLoadedFile = fpath
     vScroll.Value = 1
     Me.Columns = Me.Columns
     Me.SelStart = 0
@@ -1670,7 +1698,7 @@ End Sub
 Public Function GetData(ByVal Pos As Long) As Byte
     If Pos > mFileHandler.size Then Exit Function
     mFileHandler.ActivateChunk Pos
-    GetData = mFileHandler.Data(Pos)
+    GetData = mFileHandler.data(Pos)
 End Function
 
 Public Function GetDataChunk(ByVal Pos As Long) As String
