@@ -1,17 +1,15 @@
 Attribute VB_Name = "modShared"
 Option Explicit
 
-Public Windows As Collection
-Public CompareWindows As Collection
-Public DiffPos As Long
+'Public Windows As Collection
+'Public CompareWindows As Collection
+'Public DiffPos As Long
+Global Const LANG_US = &H409
 
 'Public Const ChunkSize As Long = 30000
 Public ChunkSize As Long
 
-Declare Function GetTempPath Lib "kernel32" Alias _
-"GetTempPathA" (ByVal nBufferLength As Long, ByVal _
-lpBuffer As String) As Long
-
+Declare Function GetTempPath Lib "kernel32" Alias "GetTempPathA" (ByVal nBufferLength As Long, ByVal lpBuffer As String) As Long
 Public Const MAX_PATH = 260
 
 Public Function GetTmpPath()
@@ -27,8 +25,8 @@ Else
 End If
 End Function
 
-Sub SaveMySetting(key, value)
-    SaveSetting "hexed", "settings", key, value
+Sub SaveMySetting(key, Value)
+    SaveSetting "hexed", "settings", key, Value
 End Sub
 
 Function GetMySetting(key, def)
@@ -73,13 +71,40 @@ Function AryIsEmpty(ary) As Boolean
 oops: AryIsEmpty = True
 End Function
 
-Sub push(ary, value) 'this modifies parent ary object
+Sub push(ary, Value) 'this modifies parent ary object
     On Error GoTo init
     Dim x
     x = UBound(ary) '<-throws Error If Not initalized
     ReDim Preserve ary(UBound(ary) + 1)
-    ary(UBound(ary)) = value
+    ary(UBound(ary)) = Value
     Exit Sub
-init:     ReDim ary(0): ary(0) = value
+init:     ReDim ary(0): ary(0) = Value
 End Sub
  
+Function shex(ByVal data) As String
+    If Len(data) = 1 Then
+        shex = "0" & data
+    Else
+        shex = data
+    End If
+End Function
+
+Function toHexString(ByVal data As String, doUnicode As Boolean, Optional prefix As String = "\x") As String
+    Dim b() As Byte
+    Dim i As Long, r As String
+    
+    If Len(data) = 0 Then Exit Function
+    
+    If doUnicode Then
+        data = StrConv(data, vbUnicode, LANG_US)
+    End If
+    
+    b() = StrConv(data, vbFromUnicode, LANG_US)
+    
+    For i = 0 To UBound(b)
+        r = r & prefix & shex(Hex(b(i)))
+    Next
+    
+    toHexString = r
+    
+End Function

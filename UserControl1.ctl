@@ -279,7 +279,7 @@ End Sub
 
 
 Private Sub Ascii_MouseDown(Button As Integer, Shift As Integer, x As Single, y As Single)
-    Dim Pos As Long
+    Dim pos As Long
     Dim xx As Long
     Dim yy As Long
     
@@ -296,11 +296,11 @@ Private Sub Ascii_MouseDown(Button As Integer, Shift As Integer, x As Single, y 
     If xx > mColumns - 1 Then xx = mColumns - 1
     If yy > Canvas.ScaleHeight / mLineHeight - 2 Then yy = Canvas.ScaleHeight / mLineHeight - 2
     
-    Pos = xx + mColumns * yy + mPos
+    pos = xx + mColumns * yy + mPos
    ' mHighlightedPos = pos
     If Button = vbLeftButton Then
         
-        mSelectedPos = Pos
+        mSelectedPos = pos
         mSelectedCursorPos = 0
         mSelStart = mSelectedPos
         mSelEnd = mSelectedPos
@@ -312,7 +312,7 @@ Private Sub Ascii_MouseDown(Button As Integer, Shift As Integer, x As Single, y 
 End Sub
 
 Private Sub Ascii_MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
-    Dim Pos As Long
+    Dim pos As Long
     Dim xx As Long
     Dim yy As Long
     
@@ -338,12 +338,12 @@ Private Sub Ascii_MouseMove(Button As Integer, Shift As Integer, x As Single, y 
     If xx > mColumns Then xx = mColumns
     If yy > Canvas.ScaleHeight / mLineHeight - 2 Then yy = Canvas.ScaleHeight / mLineHeight - 2
     
-    Pos = xx + mColumns * yy + mPos
+    pos = xx + mColumns * yy + mPos
    ' mHighlightedPos = pos
     If Button = vbLeftButton Then
         'mSelectedPos = mHighlightedPos
         mSelectedCursorPos = 0
-        mSelEnd = Pos
+        mSelEnd = pos
         If mDirection = 0 Then Call draw
     End If
     
@@ -384,11 +384,11 @@ Private Sub Canvas_GotFocus()
     mEditMode = 0
 End Sub
 
-Public Sub ScrollTo(ByVal Pos As Long)
-    Call SetPos(Pos, 0)
+Public Sub ScrollTo(ByVal pos As Long)
+    Call SetPos(pos, 0)
 End Sub
 
-Private Sub SetPos(Pos As Long, Shift As Integer, Optional CarretPos As Long = 0)
+Private Sub SetPos(pos As Long, Shift As Integer, Optional CarretPos As Long = 0)
     Dim yTop As Currency
     Dim yNow As Currency
     Dim yLast As Currency
@@ -396,26 +396,26 @@ Private Sub SetPos(Pos As Long, Shift As Integer, Optional CarretPos As Long = 0
     
     
     
-    If Pos < 0 Then Pos = 0
-    If Pos > Me.DataLength + 1 Then Pos = Me.DataLength + 1
+    If pos < 0 Then pos = 0
+    If pos > Me.DataLength + 1 Then pos = Me.DataLength + 1
     
     'mSelectedCursorPos = 0
     mSelectedCursorPos = CarretPos
     If Shift = 0 Then
-        mSelectedPos = Pos
+        mSelectedPos = pos
     End If
     
     
     GetXYfromPos mPos, xTmp, yTop
-    GetXYfromPos Pos, xTmp, yNow
+    GetXYfromPos pos, xTmp, yNow
     yLast = yTop + Int(((Canvas.ScaleHeight - mLineHeight * 2) / mLineHeight))
     
     
     If Shift = 0 Then
-        mSelStart = Pos
-        mSelEnd = Pos
+        mSelStart = pos
+        mSelEnd = pos
     Else
-        mSelEnd = Pos
+        mSelEnd = pos
     End If
     
     
@@ -491,7 +491,7 @@ End Sub
 
 Private Sub Canvas_MouseDown(Button As Integer, Shift As Integer, x As Single, y As Single)
 
-    Dim Pos As Long
+    Dim pos As Long
     Dim xx As Long
     Dim yy As Long
     
@@ -510,10 +510,10 @@ Private Sub Canvas_MouseDown(Button As Integer, Shift As Integer, x As Single, y
     If yy > Canvas.ScaleHeight / mLineHeight - 2 Then yy = Canvas.ScaleHeight / mLineHeight - 2
     
     
-    Pos = xx + mColumns * yy + mPos
+    pos = xx + mColumns * yy + mPos
    ' mHighlightedPos = pos
     If Button = vbLeftButton Then
-        mSelectedPos = Pos
+        mSelectedPos = pos
         mSelectedCursorPos = 0
         mSelEnd = mSelectedPos
         mSelStart = mSelectedPos
@@ -527,7 +527,7 @@ End Sub
 
 Private Sub Canvas_MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
 
-    Dim Pos As Long
+    Dim pos As Long
     Dim xx As Long
     Dim yy As Long
     
@@ -556,12 +556,12 @@ Private Sub Canvas_MouseMove(Button As Integer, Shift As Integer, x As Single, y
     If yy > Canvas.ScaleHeight / mLineHeight - 2 Then yy = Canvas.ScaleHeight / mLineHeight - 2
     
     
-    Pos = xx + mColumns * yy + mPos
-    If Pos > Me.DataLength + 1 Then Pos = Me.DataLength + 1
-    If Pos < 0 Then Pos = 0
+    pos = xx + mColumns * yy + mPos
+    If pos > Me.DataLength + 1 Then pos = Me.DataLength + 1
+    If pos < 0 Then pos = 0
     If Button = vbLeftButton Then
         mSelectedCursorPos = 0
-        mSelEnd = Pos
+        mSelEnd = pos
         If mDirection = 0 Then Call draw
     End If
 End Sub
@@ -744,7 +744,7 @@ Private Sub DrawNormal()
     Dim lines As Long               'number of lines to be drawn
     Dim i As Long                   'counter (outer loop)
     Dim j As Long                   'counter (inner loop)
-    Dim Pos As Long                 'pos in the file
+    Dim pos As Long                 'pos in the file
     Dim data As String              'temp var for hexvalues
     Dim HexLine As String           'templine with even column hex data
     Dim OddHexline As String        'templine with odd column hex data
@@ -786,11 +786,11 @@ Private Sub DrawNormal()
     
     
     lines = Canvas.ScaleHeight / mLineHeight
-    Pos = mPos
+    pos = mPos
     
     tmpTime = Timer
-    buff() = mFileHandler.DataScreen(Pos, mColumns * (lines + 1))
-    StatusBuff() = mFileHandler.StatusScreen(Pos, mColumns * (lines + 1))
+    buff() = mFileHandler.DataScreen(pos, mColumns * (lines + 1))
+    StatusBuff() = mFileHandler.StatusScreen(pos, mColumns * (lines + 1))
     gettime = gettime + Timer - tmpTime
     BuffPos = 0
     
@@ -805,13 +805,13 @@ Private Sub DrawNormal()
     tmpTime = Timer
     For i = 0 To lines
         
-        If Pos > Me.DataLength Then
+        If pos > Me.DataLength Then
             Exit For
         End If
         
         yPos = i * mLineHeight
         
-        HexLine = Hex(Pos)
+        HexLine = Hex(pos)
         HexLine = String(mLinenumberSize - Len(HexLine), "0") & HexLine
         
         dcMargin.PrintText HexLine, 5, i * mLineHeight, Margin.ScaleWidth, i * mLineHeight + mLineHeight, 0
@@ -827,7 +827,7 @@ Private Sub DrawNormal()
         
         For j = 0 To mColumns - 1
             
-            If Pos > Me.DataLength Then
+            If pos > Me.DataLength Then
                 Exit For
             End If
             
@@ -850,7 +850,7 @@ Private Sub DrawNormal()
             End If
             
             
-            Pos = Pos + 1
+            pos = pos + 1
             BuffPos = BuffPos + 1
             
         Next
@@ -887,7 +887,7 @@ Private Sub DrawModified()
     Dim lines As Long
     Dim i As Long
     Dim j As Long
-    Dim Pos As Long
+    Dim pos As Long
     Dim data As String
     Dim HexLine As String
     Dim AsciiLine As String
@@ -902,14 +902,14 @@ Private Sub DrawModified()
     AsciiOffset = mAsciiOffset * mAsciiWidth
     
     lines = Canvas.ScaleHeight / mLineHeight
-    Pos = mPos
+    pos = mPos
     
     dcCanvas.ForeColor = vbRed
     dcAscii.ForeColor = vbRed
     
     For i = 0 To lines
         
-        If Pos > Me.DataLength Then
+        If pos > Me.DataLength Then
             Exit For
         End If
         
@@ -920,22 +920,22 @@ Private Sub DrawModified()
         modLine = False
         For j = 0 To mColumns - 1
             
-            If Pos > Me.DataLength Then
+            If pos > Me.DataLength Then
                 Exit For
             End If
             
-            If mFileHandler.Status(Pos) = 1 Then
-                data = HexLookup(mFileHandler.data(Pos))
+            If mFileHandler.Status(pos) = 1 Then
+                data = HexLookup(mFileHandler.data(pos))
                 'If Len(Data) = 1 Then Data = "0" & Data
                 
                 HexLine = HexLine & data & " "
-                AsciiLine = AsciiLine & Chr(CharSet(mFileHandler.data(Pos)))
+                AsciiLine = AsciiLine & Chr(CharSet(mFileHandler.data(pos)))
                 modLine = True
             Else
                 HexLine = HexLine & "   "
                 AsciiLine = AsciiLine & " "
             End If
-            Pos = Pos + 1
+            pos = pos + 1
         Next
         If modLine Then
             dcCanvas.PrintText HexLine, 8 - CanvasOffset, yPos, Columns * mHexWidth - CanvasOffset + 8, yPos + mLineHeight, 0
@@ -949,7 +949,7 @@ Private Sub DrawCursors()
     Dim x As Currency
     Dim y As Currency
     Dim xx As Long
-    Dim Pos As Long
+    Dim pos As Long
     Dim data As String
     Dim CanvasOffset As Long
     Dim AsciiOffset As Long
@@ -961,8 +961,8 @@ Private Sub DrawCursors()
     
     
     If mSelectedPos >= 0 And mSelectedPos <= Me.DataLength + 1 Then
-        Pos = mSelectedPos - mPos
-        GetXYfromPos Pos, x, y
+        pos = mSelectedPos - mPos
+        GetXYfromPos pos, x, y
         xx = x * mAsciiWidth - AsciiOffset
         x = x * mHexWidth - CanvasOffset
         y = y * mLineHeight
@@ -986,7 +986,7 @@ Private Sub DrawBookmarks()
     Dim x As Currency
     Dim y As Currency
     Dim xx As Long
-    Dim Pos As Long
+    Dim pos As Long
     Dim data As String
     Dim CanvasOffset As Long
     Dim AsciiOffset As Long
@@ -997,8 +997,8 @@ Private Sub DrawBookmarks()
     
     For Each bm In mBookmarks
     
-        Pos = bm.Pos - mPos 'mSelectedPos - mPos
-        GetXYfromPos Pos, x, y
+        pos = bm.pos - mPos 'mSelectedPos - mPos
+        GetXYfromPos pos, x, y
         xx = x * mAsciiWidth - AsciiOffset
         x = x * mHexWidth - CanvasOffset
         y = y * mLineHeight
@@ -1115,6 +1115,7 @@ End Sub
 'f2 = bookmark, insert = insert..
 
 Private Sub UserControl_KeyDown(KeyCode As Integer, Shift As Integer)
+Dim tmparr() As Byte
 
 KeyCount = KeyCount + 1
     Select Case KeyCode
@@ -1147,38 +1148,33 @@ KeyCount = KeyCount + 1
             KeyCode = 0
             SetPos Me.DataLength + 1, Shift
         Case vbKeyInsert
-            If ReadOnly Then
-                MsgBox "File was opened in read only mode"
-                Exit Sub
-            End If
-            Dim tmparr() As Byte
-            If Shift = 0 Then
-                ReDim tmparr(0)
-                tmparr(0) = 0
-            Else
-                ReDim tmparr(10)
-                frmInsert.Show 1
-                UnLoad frmInsert
-            End If
-            mIsDirty = True
-            InsertData mSelectedPos, tmparr
+            ShowInsert
         Case vbKeyDelete
             If ReadOnly Then
                 MsgBox "File was opened in read only mode"
                 Exit Sub
             End If
-            Dim Length As Long
+            Dim length As Long
             Dim start As Long
             If mSelStart < mSelEnd Then
                 start = mSelStart
-                Length = mSelEnd - mSelStart + 1
+                length = mSelEnd - mSelStart + 1
             Else
                 start = mSelEnd
-                Length = mSelStart - mSelEnd + 1
+                length = mSelStart - mSelEnd + 1
             End If
-            If Length > 1 Then Length = Length - 1
+            If length > 1 Then length = length - 1
             mIsDirty = True
-            DeleteData start, Length
+            DeleteData start, length
+        Case vbKeyB
+            If Shift = 2 Then
+                'overwrite data at current offset with data in clipboard.
+                Dim b() As Byte
+                b() = StrConv(Clipboard.GetText, vbFromUnicode, LANG_US)
+                If AryIsEmpty(b) Then Exit Sub
+                OverWriteData Me.SelStart, b()
+                DoEvents
+            End If
         Case vbKeyC
             If Shift = 2 Then
                 Call CopyData(Me.SelStart, Me.SelLength)
@@ -1192,14 +1188,14 @@ KeyCount = KeyCount + 1
                 Call CopyData(Me.SelStart, Me.SelLength)
                 If mSelStart < mSelEnd Then
                     start = mSelStart
-                    Length = mSelEnd - mSelStart + 1
+                    length = mSelEnd - mSelStart + 1
                 Else
                     start = mSelEnd
-                    Length = mSelStart - mSelEnd + 1
+                    length = mSelStart - mSelEnd + 1
                 End If
-                If Length > 1 Then Length = Length - 1
+                If length > 1 Then length = length - 1
                 mIsDirty = True
-                DeleteData start, Length
+                DeleteData start, length
             End If
         Case vbKeyV
             If ReadOnly Then
@@ -1209,9 +1205,13 @@ KeyCount = KeyCount + 1
             If Shift = 2 Then
                 Dim PasteData As String
                 PasteData = Clipboard.GetText(vbCFText)
-                tmparr = StrConv(PasteData, vbFromUnicode)
+                tmparr = StrConv(PasteData, vbFromUnicode, LANG_US)
                 mIsDirty = True
                 InsertData mSelectedPos, tmparr
+            End If
+        Case vbKeyZ
+            If Shift = 2 Then
+                DoUndo
             End If
         Case vbKeyO
             If ReadOnly Then
@@ -1303,23 +1303,23 @@ Private Sub AddToUndobuffer(UB As UndoBlock)
     End If
 End Sub
 
-Private Sub ChangeData(ByVal Value As Byte, ByVal Pos As Long)
+Private Sub ChangeData(ByVal Value As Byte, ByVal pos As Long)
     'store data to undobuffer
     
     Dim UB As New UndoBlock
     UB.Action = undEdit
-    UB.Pos = Pos
-    UB.Status = mFileHandler.Status(Pos)
-    UB.Value = mFileHandler.data(Pos)
+    UB.pos = pos
+    UB.Status = mFileHandler.Status(pos)
+    UB.Value = mFileHandler.data(pos)
     
     AddToUndobuffer UB
     
     'store value and mark the byte as modified
-    If mFileHandler.data(Pos) <> Value Then
+    If mFileHandler.data(pos) <> Value Then
         'only set as modified if byte differs
-        mFileHandler.Status(Pos) = 1
+        mFileHandler.Status(pos) = 1
     End If
-    mFileHandler.data(Pos) = Value
+    mFileHandler.data(pos) = Value
     If Not mIsDirty Then
         RaiseEvent Dirty
         mIsDirty = True 'we have changed some data , the file is now dirty..
@@ -1340,61 +1340,121 @@ Public Sub DoUndo()
     mUndoBuffer.Remove mUndoBuffer.Count
     
     'always activate the affected chunk/s
-    mFileHandler.ActivateChunk UB.Pos
+    mFileHandler.ActivateChunk UB.pos
     
     Select Case UB.Action
         Case undEdit
-            mFileHandler.data(UB.Pos) = UB.Value
-            mFileHandler.Status(UB.Pos) = UB.Status
-            SetPos UB.Pos, 0
+            mFileHandler.data(UB.pos) = UB.Value
+            mFileHandler.Status(UB.pos) = UB.Status
+            SetPos UB.pos, 0
             
         Case undInsert
-            mFileHandler.DeleteData UB.Pos, UB.Custom
-            SetPos UB.Pos, 0
+            mFileHandler.DeleteData UB.pos, UB.Custom
+            SetPos UB.pos, 0
             
         Case undDelete
-            mFileHandler.InsertDataStatus UB.Pos, UB.Value, UB.Status
-            SetPos UB.Pos, 0
+            mFileHandler.InsertDataStatus UB.pos, UB.Value, UB.Status
+            SetPos UB.pos, 0
     End Select
     
     Call draw
     
 End Sub
 
-Private Sub GetXYfromPos(ByRef Pos, ByRef x As Currency, ByRef y As Currency)
-  y = Pos \ Columns
-  x = Pos - Columns * y
+Private Sub GetXYfromPos(ByRef pos, ByRef x As Currency, ByRef y As Currency)
+  y = pos \ Columns
+  x = pos - Columns * y
 End Sub
 
-Private Sub CopyData(ByVal Pos As Long, ByVal Length As Long)
-    Clipboard.Clear
-    Dim buff() As Byte
-    Dim str As String
-    If Length = 0 Then Exit Sub
-    If Length < 0 Then
-        Pos = Pos + Length
-        Length = -Length
+Public Property Get SelText() As String
+    Dim buff() As Byte, pos As Long, length As Long
+    pos = SelStart
+    length = SelLength
+    If length = 0 Then Exit Property
+    If length < 0 Then
+        pos = pos + length
+        length = -length
     End If
-    buff = mFileHandler.DataScreen(Pos, Length)
-    str = StrConv(buff, vbUnicode)
-    'MsgBox str
-    Clipboard.SetText str, vbCFText
+    buff = mFileHandler.DataScreen(pos, length)
+    SelText = StrConv(buff, vbUnicode, LANG_US)
+End Property
+
+Public Property Get SelTextAsHexCodes(Optional prefix As String = Empty) As String
+    SelTextAsHexCodes = toHexString(SelText, False, prefix)
+End Property
+
+Sub CopyData(ByVal pos As Long, ByVal length As Long)
+    Clipboard.Clear
+    Dim buff() As Byte, sText As String
+    If length = 0 Then Exit Sub
+    If length < 0 Then
+        pos = pos + length
+        length = -length
+    End If
+    buff = mFileHandler.DataScreen(pos, length)
+    sText = StrConv(buff, vbUnicode, LANG_US)
+    Clipboard.SetText sText, vbCFText
 End Sub
 
-Private Sub InsertData(ByVal Pos As Long, data() As Byte)
+Sub ShowInsert()
+    
+    If ReadOnly Then
+        MsgBox "File was opened in read only mode"
+        Exit Sub
+    End If
+    
+    Dim b() As Byte
+    Dim i As Long
+    
+    frmInsert.Show 1
+    
+    If frmInsert.Cancel Or frmInsert.ByteCount < 1 Then
+        UnLoad frmInsert
+        Exit Sub
+    End If
+    
+    ReDim b(frmInsert.ByteCount - 1)
+    
+    If frmInsert.ByteValue <> 0 Then
+        For i = 0 To UBound(b)
+            b(i) = frmInsert.ByteValue
+        Next
+    End If
+    
+    UnLoad frmInsert
+    mIsDirty = True
+    InsertData mSelectedPos, b
+End Sub
+
+Sub InsertData(ByVal pos As Long, data() As Byte)
+    
+    If ReadOnly Then
+        MsgBox "File was opened in read only mode"
+        Exit Sub
+    End If
+    
     Dim UB As New UndoBlock
     UB.Action = undInsert
-    UB.Pos = Pos
+    UB.pos = pos
     UB.Status = ""
     UB.Value = ""
     UB.Custom = UBound(data) + 1    'store length
     
     AddToUndobuffer UB
-    mFileHandler.InsertData Pos, data
+    mFileHandler.InsertData pos, data
     Columns = Columns
 End Sub
 
-Private Sub DeleteData(ByVal Pos As Long, ByVal Length As Long)
+Sub OverWriteData(ByVal pos As Long, data() As Byte)
+    If ReadOnly Then
+        MsgBox "File was opened in read only mode"
+        Exit Sub
+    End If
+    DeleteData pos, UBound(data) + 1
+    InsertData pos, data()
+End Sub
+
+Sub DeleteData(ByVal pos As Long, ByVal length As Long)
     Dim UB As New UndoBlock
         
     If ReadOnly Then
@@ -1402,16 +1462,16 @@ Private Sub DeleteData(ByVal Pos As Long, ByVal Length As Long)
         Exit Sub
     End If
             
-    mFileHandler.ActivateChunk Pos
+    mFileHandler.ActivateChunk pos
     
     UB.Action = undDelete
-    UB.Pos = Pos
-    UB.Status = mFileHandler.StatusScreen(Pos, Length)
-    UB.Value = mFileHandler.DataScreen(Pos, Length)
+    UB.pos = pos
+    UB.Status = mFileHandler.StatusScreen(pos, length)
+    UB.Value = mFileHandler.DataScreen(pos, length)
     
     AddToUndobuffer UB
-    mFileHandler.DeleteData Pos, Length
-    SetPos Pos, 0
+    mFileHandler.DeleteData pos, length
+    SetPos pos, 0
     Columns = Columns
 End Sub
 
@@ -1451,7 +1511,7 @@ End Sub
 '------------------
 Public Function LoadString(data As String, Optional ViewOnly As Boolean = True) As Boolean
     Dim b() As Byte
-    b() = StrConv(data, vbFromUnicode, &H409)
+    b() = StrConv(data, vbFromUnicode, LANG_US)
     LoadString = LoadByteArray(b())
 End Function
 
@@ -1695,17 +1755,17 @@ Public Sub Scroll(ByVal Amount As Long)
 End Sub
 
 
-Public Function GetData(ByVal Pos As Long) As Byte
-    If Pos > mFileHandler.size Then Exit Function
-    mFileHandler.ActivateChunk Pos
-    GetData = mFileHandler.data(Pos)
+Public Function GetData(ByVal pos As Long) As Byte
+    If pos > mFileHandler.size Then Exit Function
+    mFileHandler.ActivateChunk pos
+    GetData = mFileHandler.data(pos)
 End Function
 
-Public Function GetDataChunk(ByVal Pos As Long) As String
-    If Pos > mFileHandler.size Then Exit Function
-    mFileHandler.ActivateChunk Pos
+Public Function GetDataChunk(ByVal pos As Long) As String
+    If pos > mFileHandler.size Then Exit Function
+    mFileHandler.ActivateChunk pos
     Dim s As String
-    s = mFileHandler.DataScreen(Pos, ChunkSize)
+    s = mFileHandler.DataScreen(pos, ChunkSize)
     GetDataChunk = s
 End Function
 
@@ -1713,19 +1773,27 @@ Public Function FileSize() As Long
     FileSize = mFileHandler.size
 End Function
 
-Public Sub ToggleBookmark(ByVal Pos As Long)
+Property Get BookMarks() As Collection
+    Set BookMarks = mBookmarks
+End Property
+
+Public Sub ShowBookMarks()
+    frmOffsetList.LoadBookMarks Me
+End Sub
+
+Public Sub ToggleBookmark(ByVal pos As Long)
     Dim bm As Bookmark
     On Error Resume Next
-    Set bm = mBookmarks("abc" & Pos)
+    Set bm = mBookmarks("abc" & pos)
     If Err Then
         'add bookmark
         Set bm = New Bookmark
-        bm.Pos = Pos
-        mBookmarks.Add bm, "abc" & Pos
+        bm.pos = pos
+        mBookmarks.Add bm, "abc" & pos
         Call draw
     Else
         'remove bookmark
-        mBookmarks.Remove ("abc" & Pos)
+        mBookmarks.Remove ("abc" & pos)
         Call draw
     End If
 End Sub
@@ -1735,7 +1803,7 @@ Public Sub GotoNextBookmark()
     On Error Resume Next
     If mBookmarkPos >= mBookmarks.Count Then mBookmarkPos = 0
     Set bm = mBookmarks(mBookmarkPos + 1)
-    SetPos bm.Pos, 0
+    SetPos bm.pos, 0
     mBookmarkPos = mBookmarkPos + 1
     Err.Clear
 End Sub

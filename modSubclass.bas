@@ -30,7 +30,7 @@ Private Function WndProc(ByVal hWnd As Long, ByVal Msg As Long, _
         Case 1 'user ctrl
              Set Control = Controls.Item("hwnd" & hWnd)
              
-             If Control Is Nothing Then
+             If Control Is Nothing Then 'dzzie
                 Debug.Print "hwnd: " & hWnd & " was expected to be a Control but wasnt registered? ignoring..."
                 Exit Function
              End If

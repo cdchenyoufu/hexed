@@ -18,22 +18,46 @@ Begin VB.Form frmEditor
       TabStop         =   0   'False
       Top             =   0
       Width           =   8295
-      _ExtentX        =   14631
-      _ExtentY        =   14420
+      _extentx        =   14631
+      _extenty        =   14420
    End
    Begin VB.Menu mnuFile 
       Caption         =   "File"
       Begin VB.Menu mnuOpen 
-         Caption         =   "Open"
+         Caption         =   "Open (Ctrl+O)"
       End
       Begin VB.Menu mnuSave 
-         Caption         =   "Save"
+         Caption         =   "Save (Ctrl+S)"
+      End
+      Begin VB.Menu mnuAbout 
+         Caption         =   "About"
+      End
+   End
+   Begin VB.Menu mnuEdit 
+      Caption         =   "Edit"
+      Begin VB.Menu mnuInsert 
+         Caption         =   "Insert (INS)"
+      End
+      Begin VB.Menu mnuUndo 
+         Caption         =   "Undo (CTRL+Z)"
+      End
+      Begin VB.Menu mnuCopyHexCodes 
+         Caption         =   "Copy HexCodes"
       End
       Begin VB.Menu mnuSearch 
          Caption         =   "Search"
       End
-      Begin VB.Menu mnuAbout 
-         Caption         =   "About"
+      Begin VB.Menu mnuSpacer 
+         Caption         =   "-"
+      End
+      Begin VB.Menu mnuAddBookMark 
+         Caption         =   "Add BookMark (SHIFT+F2)"
+      End
+      Begin VB.Menu mnuGotoNextBookMark 
+         Caption         =   "Goto Next BookMark (F2)"
+      End
+      Begin VB.Menu mnuShowBookMarks 
+         Caption         =   "Show BookMarks"
       End
    End
 End
@@ -43,7 +67,8 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
-'todo: copy inserts 0x03..have to kill that..
+'todo: copy from character pane inserts 0x03..have to kill that..(not from hex char pane)
+'      add ctrl+B write buffer (paste over)
 
 Private Sub Form_Activate()
     Me.HexEditor.SetFocus
@@ -55,7 +80,7 @@ End Sub
 
 Private Sub Form_Load()
    Me.Visible = True
-   mnuOpen.Visible = isIDE()
+   'mnuOpen.Visible = isIDE() 'enable this in release
 End Sub
 
 Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
@@ -86,10 +111,35 @@ Private Sub mnuAbout_Click()
     HexEditor.ShowAbout
 End Sub
 
+Private Sub mnuAddBookMark_Click()
+    HexEditor.ToggleBookmark HexEditor.SelStart
+End Sub
+
+Private Sub mnuCopyHexCodes_Click()
+   Clipboard.Clear
+   Clipboard.SetText HexEditor.SelTextAsHexCodes
+End Sub
+
+Private Sub mnuGotoNextBookMark_Click()
+    HexEditor.GotoNextBookmark
+End Sub
+
+Private Sub mnuInsert_Click()
+    HexEditor.ShowInsert
+End Sub
+
 Private Sub mnuOpen_Click()
     HexEditor.ShowOpen
 End Sub
 
 Private Sub mnuSearch_Click()
      HexEditor.ShowFind
+End Sub
+
+Private Sub mnuShowBookMarks_Click()
+    HexEditor.ShowBookMarks
+End Sub
+
+Private Sub mnuUndo_Click()
+    HexEditor.DoUndo
 End Sub

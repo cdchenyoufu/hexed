@@ -34,6 +34,7 @@ Private Sub Class_Initialize()
     ReSized = False
 End Sub
 
+'dzzie
 Public Function Search(searchFor As String, Optional isUnicode As Boolean = False, Optional caseInsensitive As Boolean = False) As String()
     Dim cs As New CSearch
     
@@ -112,7 +113,7 @@ Public Sub Load(Filename As String)
     ReSized = False
 End Sub
 
-Public Sub ActivateChunk(Pos As Long)
+Public Sub ActivateChunk(pos As Long)
     Dim Chunk As Chunk
     Dim i As Long
     'bailout if not loaded
@@ -120,7 +121,7 @@ Public Sub ActivateChunk(Pos As Long)
     
     
     If Not Chunk1 Is Nothing Then
-        If Pos >= Chunk1.offset And Pos <= Chunk1.size + Chunk1.offset - 1 Then
+        If pos >= Chunk1.offset And pos <= Chunk1.size + Chunk1.offset - 1 Then
             'chunk already loaded
             Exit Sub
         End If
@@ -129,7 +130,7 @@ Public Sub ActivateChunk(Pos As Long)
 
     Dim Current As Long
 
-    Current = GetChunkFromPos(Pos)
+    Current = GetChunkFromPos(pos)
     Set Chunk1 = Chunks(Current)
     Chunk1.Load
     If Current < UBound(Chunks) Then
@@ -140,7 +141,7 @@ Public Sub ActivateChunk(Pos As Long)
     End If
 End Sub
 
-Private Function GetChunkFromPos(ByVal Pos As Long) As Long
+Private Function GetChunkFromPos(ByVal pos As Long) As Long
     Dim Upper As Long
     Dim Lower As Long
     Dim Current As Long
@@ -154,11 +155,11 @@ Private Function GetChunkFromPos(ByVal Pos As Long) As Long
     Do While Not hit And Upper >= Lower
         Current = Int((Upper + Lower) / 2)
         Set Chunk = Chunks(Current)
-        If Pos >= Chunk.offset And Pos <= Chunk.offset + Chunk.size Then
+        If pos >= Chunk.offset And pos <= Chunk.offset + Chunk.size Then
             hit = True
             GetChunkFromPos = Current   'return pos
             Exit Function
-        ElseIf Pos > Chunk.offset + Chunk.size Then
+        ElseIf pos > Chunk.offset + Chunk.size Then
             Lower = Current + 1
         Else
             Upper = Current - 1
@@ -296,7 +297,7 @@ Public Sub InsertDataStatus(ByVal Index As Long, data() As Byte, Status() As Byt
     ReSized = True
 End Sub
 
-Public Sub DeleteData(ByVal Index As Long, ByVal Length As Long)
+Public Sub DeleteData(ByVal Index As Long, ByVal length As Long)
     '' fixa så man kan deletea över flera chunks
     ''
     Dim LastChunkID As Long
@@ -313,8 +314,8 @@ Public Sub DeleteData(ByVal Index As Long, ByVal Length As Long)
     
     If mLoaded = False Then Exit Sub
     If Index >= Chunk1.offset And Index <= Chunk1.size + Chunk1.offset - 1 Then
-        If (Index + Length - 1) > (Chunk1.offset + Chunk1.size - 1) Then
-            LastChunkID = GetChunkFromPos(Index + Length - 1)
+        If (Index + length - 1) > (Chunk1.offset + Chunk1.size - 1) Then
+            LastChunkID = GetChunkFromPos(Index + length - 1)
             '//lastchunk is the chunk that SELEND is located in
             Set LastChunk = Chunks(LastChunkID)
             'pos 7520 +14
@@ -324,7 +325,7 @@ Public Sub DeleteData(ByVal Index As Long, ByVal Length As Long)
             
             If LastChunk.Index = Chunk1.Index + 1 Then
                 'overlapping one block only  - seems to work fine now =)
-                Length2 = Length - Length1
+                Length2 = length - Length1
                 Chunk2.DeleteData Chunk2.offset, Length2
                         
             Else
@@ -335,7 +336,7 @@ Public Sub DeleteData(ByVal Index As Long, ByVal Length As Long)
                     tmpChunk.DeleteData tmpChunk.offset, tmpChunk.size
                 Next
                 
-                Length2 = (Length - Length3) - Length1
+                Length2 = (length - Length3) - Length1
                 
                 MsgBox "ohoj!!" & Length2
                 LastChunk.DeleteData LastChunk.offset, Length2
@@ -343,15 +344,15 @@ Public Sub DeleteData(ByVal Index As Long, ByVal Length As Long)
             End If
         Else
         'delete inside one chunk only
-            Chunk1.DeleteData Index, Length
+            Chunk1.DeleteData Index, length
         End If
     Else
         If Not Chunk2 Is Nothing Then
-            Chunk2.DeleteData Index, Length
+            Chunk2.DeleteData Index, length
         End If
     End If
     Call FixOffsets
-    size = size - Length
+    size = size - length
     ReSized = True
 End Sub
 
@@ -406,7 +407,7 @@ Private Sub SaveReSized()
     Err.Clear
     
     For i = 1 To UBound(Chunks)
-        frmProgress.pb.value = i
+        frmProgress.pb.Value = i
         Call Chunks(i).UnLoad
         Chunks(i).NewFilename = NewFilename
         Chunks(i).SaveNew

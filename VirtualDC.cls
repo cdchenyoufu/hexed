@@ -461,7 +461,7 @@ Public Property Set Font(ByVal NewFont As StdFont)
     Dim tFont As LOGFONT
 
     ' Font name is a byte array and is in ANSI (DOS) format (1 byte = 1 character)
-    nName = StrConv(NewFont.name & Chr$(0), vbFromUnicode)
+    nName = StrConv(NewFont.name & Chr$(0), vbFromUnicode, LANG_US)
     nSize = UBound(nName)
     If nSize > LF_FACESIZE Then nSize = LF_FACESIZE
     For i = 0 To nSize

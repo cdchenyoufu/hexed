@@ -200,7 +200,7 @@ Private Sub Class_Terminate()
 End Sub
 
 
-Public Sub InsertData(ByVal Pos As Long, data() As Byte)
+Public Sub InsertData(ByVal pos As Long, data() As Byte)
     Dim tmp As String
     Dim ltmp As String
     Dim rtmp As String
@@ -208,62 +208,62 @@ Public Sub InsertData(ByVal Pos As Long, data() As Byte)
     Dim insertstatus As String
     
     '//safety .. bailout if pos is less than 0
-    If Pos < 0 Then Exit Sub
+    If pos < 0 Then Exit Sub
     
     
     If UBound(mData) = -1 Then
         'if chunk is empty ... replace it with this data
         mData = data
         insertstatus = String(UBound(mData) + 1, Chr(1))
-        mStatus = StrConv(insertstatus, vbFromUnicode)
+        mStatus = StrConv(insertstatus, vbFromUnicode, LANG_US)
         mIsDirty = True
         size = UBound(mData) + 1
         Exit Sub
     End If
     
     
-    Pos = Pos - offset
+    pos = pos - offset
 
-    insert = StrConv(data(), vbUnicode)
-    tmp = StrConv(mData, vbUnicode)
-    ltmp = Mid(tmp, 1, Pos)
-    rtmp = Mid(tmp, Pos + 1)
+    insert = StrConv(data(), vbUnicode, LANG_US)
+    tmp = StrConv(mData, vbUnicode, LANG_US)
+    ltmp = Mid(tmp, 1, pos)
+    rtmp = Mid(tmp, pos + 1)
     tmp = ltmp & insert & rtmp
-    mData = StrConv(tmp, vbFromUnicode)
+    mData = StrConv(tmp, vbFromUnicode, LANG_US)
 
     insertstatus = String(Len(insert), Chr(1))
-    tmp = StrConv(mStatus, vbUnicode)
-    ltmp = Mid(tmp, 1, Pos)
-    rtmp = Mid(tmp, Pos + 1)
+    tmp = StrConv(mStatus, vbUnicode, LANG_US)
+    ltmp = Mid(tmp, 1, pos)
+    rtmp = Mid(tmp, pos + 1)
     tmp = ltmp & insertstatus & rtmp
-    mStatus = StrConv(tmp, vbFromUnicode)
+    mStatus = StrConv(tmp, vbFromUnicode, LANG_US)
     mIsDirty = True
     
     'increase chunksize
     size = size + UBound(data) + 1
 End Sub
 
-Public Sub InsertDataStatus(ByVal Pos As Long, data() As Byte, Status() As Byte)
+Public Sub InsertDataStatus(ByVal pos As Long, data() As Byte, Status() As Byte)
     Dim tmp As String
     Dim ltmp As String
     Dim rtmp As String
     Dim insert As String
     Dim insertstatus As String
-    Pos = Pos - offset
+    pos = pos - offset
 
-    insert = StrConv(data(), vbUnicode)
-    tmp = StrConv(mData, vbUnicode)
-    ltmp = Mid(tmp, 1, Pos)
-    rtmp = Mid(tmp, Pos + 1)
+    insert = StrConv(data(), vbUnicode, LANG_US)
+    tmp = StrConv(mData, vbUnicode, LANG_US)
+    ltmp = Mid(tmp, 1, pos)
+    rtmp = Mid(tmp, pos + 1)
     tmp = ltmp & insert & rtmp
-    mData = StrConv(tmp, vbFromUnicode)
+    mData = StrConv(tmp, vbFromUnicode, LANG_US)
 
-    insertstatus = StrConv(Status(), vbUnicode)
-    tmp = StrConv(mStatus, vbUnicode)
-    ltmp = Mid(tmp, 1, Pos)
-    rtmp = Mid(tmp, Pos + 1)
+    insertstatus = StrConv(Status(), vbUnicode, LANG_US)
+    tmp = StrConv(mStatus, vbUnicode, LANG_US)
+    ltmp = Mid(tmp, 1, pos)
+    rtmp = Mid(tmp, pos + 1)
     tmp = ltmp & insertstatus & rtmp
-    mStatus = StrConv(tmp, vbFromUnicode)
+    mStatus = StrConv(tmp, vbFromUnicode, LANG_US)
     mIsDirty = True
     
     'increase chunksize
@@ -271,30 +271,30 @@ Public Sub InsertDataStatus(ByVal Pos As Long, data() As Byte, Status() As Byte)
 End Sub
 
 
-Public Sub DeleteData(ByVal Pos As Long, ByVal Length As Long)
+Public Sub DeleteData(ByVal pos As Long, ByVal length As Long)
    Dim tmp As String
     Dim ltmp As String
     Dim rtmp As String
     Dim insert As String
     Dim insertstatus As String
-    Pos = Pos - offset
+    pos = pos - offset
 
-    If Pos - 1 + Length > size Then Exit Sub
+    If pos - 1 + length > size Then Exit Sub
 
-    tmp = StrConv(mData, vbUnicode)
-    ltmp = Mid(tmp, 1, Pos)
-    rtmp = Mid(tmp, Pos + 1 + Length)
+    tmp = StrConv(mData, vbUnicode, LANG_US)
+    ltmp = Mid(tmp, 1, pos)
+    rtmp = Mid(tmp, pos + 1 + length)
     tmp = ltmp & rtmp
-    mData = StrConv(tmp, vbFromUnicode)
+    mData = StrConv(tmp, vbFromUnicode, LANG_US)
 
-    tmp = StrConv(mStatus, vbUnicode)
-    ltmp = Mid(tmp, 1, Pos)
-    rtmp = Mid(tmp, Pos + 1 + Length)
+    tmp = StrConv(mStatus, vbUnicode, LANG_US)
+    ltmp = Mid(tmp, 1, pos)
+    rtmp = Mid(tmp, pos + 1 + length)
     tmp = ltmp & rtmp
-    mStatus = StrConv(tmp, vbFromUnicode)
+    mStatus = StrConv(tmp, vbFromUnicode, LANG_US)
     mIsDirty = True
     
-    size = size - Length
+    size = size - length
 End Sub
 
 Public Property Get IsInitialized() As Boolean

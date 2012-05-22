@@ -47,31 +47,6 @@ Function FromBytes(searchFor As String, buf() As Byte, Optional doUnicode As Boo
     Erase ret
 End Function
 
-Private Function shex(ByVal data) As String
-    If Len(data) = 1 Then
-        shex = "0" & data
-    Else
-        shex = data
-    End If
-End Function
-
-Private Function toHexString(ByVal data As String, doUnicode As Boolean) As String
-    Dim b() As Byte
-    Dim i As Long, r As String
-    
-    If doUnicode Then
-        data = StrConv(data, vbUnicode, &H409)
-    End If
-    
-    b() = StrConv(data, vbFromUnicode, &H409)
-    
-    For i = 0 To UBound(b)
-        r = r & "\x" & shex(Hex(b(i)))
-    Next
-    
-    toHexString = r
-    
-End Function
 Private Function setPattern(searchFor As String, doUnicode As Boolean, caseInsensitive As Boolean)
     
     d.IgnoreCase = caseInsensitive
@@ -88,7 +63,7 @@ Function FromString(searchFor As String, buffer As String, Optional doUnicode As
     On Error Resume Next
     Dim buf()  As Byte
     setPattern searchFor, doUnicode, caseInsensitive
-    buf = StrConv(buffer, vbFromUnicode)
+    buf = StrConv(buffer, vbFromUnicode, LANG_US)
     Search buf, 0
     FromString = ret
     Erase ret
@@ -151,11 +126,11 @@ End Function
 Private Sub Search(buf() As Byte, base As Long)
     Dim b As String
     
-    b = StrConv(buf, vbUnicode, &H409)
+    b = StrConv(buf, vbUnicode, LANG_US)
     Set mc = d.Execute(b)
     
     For Each m In mc
-        push ret(), (base + m.FirstIndex - 1) & "," & Replace(m.value, Chr(0), Empty)
+        push ret(), (base + m.FirstIndex - 1) & "," & Replace(m.Value, Chr(0), Empty)
     Next
     
 End Sub
@@ -187,13 +162,13 @@ End Sub
 '
 'End Function
 
-Private Sub push(ary, value) 'this modifies parent ary object
+Private Sub push(ary, Value) 'this modifies parent ary object
     On Error GoTo init
     Dim x
     x = UBound(ary) '<-throws Error If Not initalized
     ReDim Preserve ary(UBound(ary) + 1)
-    ary(UBound(ary)) = value
+    ary(UBound(ary)) = Value
     Exit Sub
-init:     ReDim ary(0): ary(0) = value
+init:     ReDim ary(0): ary(0) = Value
 End Sub
  

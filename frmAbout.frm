@@ -41,10 +41,9 @@ Private Sub Form_Load()
     Dim r()
     
     push r, "VB HexEditor by Rang3r\n"
-    push r, "filebuffer (load files upto 2.1 gb)"
-    push r, "copy paste data in both hex/text mode, delete/insert bytes (INS)"
-    push r, "custom scrollbar to allow more than 32k lines"
-    push r, "bookmarks (F2)\n"
+    push r, "buffered file access and screen display (load files upto 2.1 gb)"
+    push r, "copy/paste data in both hex/text mode, delete/insert/overwrite"
+    push r, "bookmarks, undo, custom scrollbar\n"
     push r, "http://www.Planet-Source-Code.com/vb/scripts/ShowCode.asp?txtCodeId=34729&lngWId=1\n"
     push r, "dzzie mods:\n\tLoadedFromBytes/String, ReadOnly, \n\tForceLoadFromMemOnly, Find, Converted to OCX\n"
     push r, "Big thanks to Rang3r for releasing this, its a great codebase!"

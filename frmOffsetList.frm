@@ -49,6 +49,12 @@ Begin VB.Form frmOffsetList
       Begin VB.Menu mnuCopySelected 
          Caption         =   "Copy Selected"
       End
+      Begin VB.Menu mnuRemove 
+         Caption         =   "Remove"
+      End
+      Begin VB.Menu mnuEditDescription 
+         Caption         =   "Edit Description"
+      End
    End
 End
 Attribute VB_Name = "frmOffsetList"
@@ -59,6 +65,36 @@ Attribute VB_Exposed = False
 Private owner As HexEd
 Private selLi As ListItem
 
+Private Enum viewMode
+    searchList = 0
+    bookMarkList = 1
+End Enum
+
+Private vMode As viewMode
+
+Function LoadBookMarks(he As HexEd)
+    
+    Dim b As Bookmark
+    Dim bmks As Collection
+    Dim li As ListItem
+    
+    vMode = bookMarkList
+    On Error Resume Next
+    Set owner = he
+    
+    Set bmks = owner.BookMarks
+    
+    For Each b In bmks
+        Set li = lv.ListItems.Add(, , Hex(b.pos))
+        Set li.Tag = b
+        li.SubItems(1) = b.Description
+    Next
+    
+    Me.Visible = True
+    
+End Function
+
+
 Function LoadList(he As HexEd, data() As String)
     
     Dim tmp
@@ -67,6 +103,7 @@ Function LoadList(he As HexEd, data() As String)
     
     On Error Resume Next
     
+    vMode = searchList
     Set owner = he
     
     For Each x In data
@@ -92,11 +129,20 @@ End Sub
 
 Private Sub lv_ItemClick(ByVal Item As MSComctlLib.ListItem)
     On Error Resume Next
-    owner.ScrollTo CLng(Item.Tag)
-    If Len(Item.SubItems(1)) > 0 Then
-        owner.SelLength = Len(Item.SubItems(1))
+    Dim b As Bookmark
+    
+    If vMode = searchList Then
+        owner.ScrollTo CLng(Item.Tag)
+        If Len(Item.SubItems(1)) > 0 Then
+            owner.SelLength = Len(Item.SubItems(1))
+        End If
+    ElseIf vMode = bookMarkList Then
+        Set b = Item.Tag
+        owner.ScrollTo b.pos
     End If
+        
     Set selLi = Item
+    
 End Sub
 
 Private Sub Form_Load()
@@ -108,7 +154,10 @@ Private Sub Form_Unload(Cancel As Integer)
 End Sub
 
 Private Sub lv_MouseUp(Button As Integer, Shift As Integer, x As Single, y As Single)
-    If Button = 2 Then PopupMenu mnuPopup
+    If Button = 2 Then
+        mnuEditDescription.Visible = (vMode = bookMarkList)
+        PopupMenu mnuPopup
+    End If
 End Sub
 
 Private Sub mnuCopy_Click()
@@ -127,4 +176,36 @@ Private Sub mnuCopySelected_Click()
     tmp = selLi.Text & vbTab & selLi.SubItems(1)
     Clipboard.Clear
     Clipboard.SetText tmp
+End Sub
+
+Private Sub mnuEditDescription_Click()
+    Dim b As Bookmark
+    Dim s As String
+    
+    If selLi Is Nothing Then Exit Sub
+    If vMode = bookMarkList Then
+        Set b = selLi.Tag
+        s = InputBox("Enter description:", , b.Description)
+        If Len(s) = 0 Then Exit Sub
+        b.Description = s
+        selLi.SubItems(1) = s
+    End If
+        
+End Sub
+
+Private Sub mnuRemove_Click()
+    Dim b As Bookmark
+    On Error Resume Next
+    
+    If selLi Is Nothing Then Exit Sub
+    
+    If vMode = bookMarkList Then
+        Set b = selLi.Tag
+        owner.ToggleBookmark b.pos
+        Set b = Nothing
+    End If
+    
+    lv.ListItems.Remove selLi.Index
+    Set selLi = Nothing
+    
 End Sub
