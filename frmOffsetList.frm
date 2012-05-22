@@ -55,6 +55,12 @@ Begin VB.Form frmOffsetList
       Begin VB.Menu mnuEditDescription 
          Caption         =   "Edit Description"
       End
+      Begin VB.Menu mnuExportList 
+         Caption         =   "Export List"
+      End
+      Begin VB.Menu mnuImportList 
+         Caption         =   "Import List"
+      End
    End
 End
 Attribute VB_Name = "frmOffsetList"
@@ -85,7 +91,7 @@ Function LoadBookMarks(he As HexEd)
     Set bmks = owner.BookMarks
     
     For Each b In bmks
-        Set li = lv.ListItems.Add(, , Hex(b.pos))
+        Set li = lv.ListItems.Add(, , Hex(b.Pos))
         Set li.Tag = b
         li.SubItems(1) = b.Description
     Next
@@ -138,7 +144,7 @@ Private Sub lv_ItemClick(ByVal Item As MSComctlLib.ListItem)
         End If
     ElseIf vMode = bookMarkList Then
         Set b = Item.Tag
-        owner.ScrollTo b.pos
+        owner.ScrollTo b.Pos
     End If
         
     Set selLi = Item
@@ -193,6 +199,89 @@ Private Sub mnuEditDescription_Click()
         
 End Sub
 
+Private Sub mnuExportList_Click()
+    Dim dlg As New clsCmnDlg2
+    Dim f As String
+    On Error Resume Next
+    f = dlg.SaveDialog(AllFiles, , , , Me.hWnd, IIf(vMode = bookMarkList, "bookmarks.bml", "results.txt"))
+    If Len(f) = 0 Then Exit Sub
+    Dim li As ListItem
+    Dim tmp As String
+    For Each li In lv.ListItems
+        tmp = tmp & li.Text & "," & li.SubItems(1) & vbCrLf
+    Next
+    WriteFile f, tmp
+    Set dlg = Nothing
+End Sub
+
+Private Sub WriteFile(path As String, it As Variant)
+    Dim f As Long
+    f = FreeFile
+    Open path For Output As #f
+    Print #f, it
+    Close f
+End Sub
+
+Private Function ReadFile(filename) As Variant
+  Dim f As Long
+  Dim temp As Variant
+  f = FreeFile
+  temp = ""
+   Open filename For Binary As #f        ' Open file.(can be text or image)
+     temp = Input(FileLen(filename), #f) ' Get entire Files data
+   Close #f
+   ReadFile = temp
+End Function
+
+Private Sub ClearCollection(c As Collection)
+    While c.Count > 0
+        c.Remove 1
+    Wend
+End Sub
+
+Private Sub mnuImportList_Click()
+    Dim dlg As New clsCmnDlg2
+    Dim f, x
+    Dim cb As Bookmark
+    Dim c As Collection
+    Dim tmp
+    Dim ff() As String
+    
+    On Error Resume Next
+    
+    f = dlg.OpenDialog(AllFiles, , , Me.hWnd)
+    If Len(f) = 0 Then Exit Sub
+    Set dlg = Nothing
+    
+    vMode = IIf(LCase(Right(f, 4)) = ".bml", bookMarkList, searchList)
+    f = ReadFile(f)
+    ff = Split(f, vbCrLf)
+    
+    If vMode = bookMarkList Then
+        Set c = owner.BookMarks
+        ClearCollection c
+        For Each x In ff
+            If Len(x) > 0 And InStr(x, ",") > 0 Then
+                Err.Clear
+                tmp = Split(x, ",")
+                Set cb = New Bookmark
+                cb.Pos = CLng("&h" & tmp(0))
+                cb.Description = tmp(1)
+                If Err.Number = 0 Then c.Add cb
+            End If
+        Next
+        LoadBookMarks owner
+        owner.Refresh
+    Else
+        LoadList owner, ff
+    End If
+            
+                
+End Sub
+
+
+
+
 Private Sub mnuRemove_Click()
     Dim b As Bookmark
     On Error Resume Next
@@ -201,7 +290,7 @@ Private Sub mnuRemove_Click()
     
     If vMode = bookMarkList Then
         Set b = selLi.Tag
-        owner.ToggleBookmark b.pos
+        owner.ToggleBookmark b.Pos
         Set b = Nothing
     End If
     

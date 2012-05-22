@@ -13,6 +13,11 @@ Private Const wm_KeyPress = &H100
 
 Private Controls As New Collection
 
+'so far subclassing has only been used to add mouse wheel support, but in dev it
+'can lead to allot of IDE crashs and problems when debugging..
+'disabled for now and maybe always for me...
+Private Const SUBCLASS_ENABLED = False
+
 Private Function WndProc(ByVal hWnd As Long, ByVal Msg As Long, _
    ByVal wParam As Long, ByVal lParam As Long) As Long
     Dim high As Long
@@ -64,6 +69,9 @@ Private Function WndProc(ByVal hWnd As Long, ByVal Msg As Long, _
 End Function
 
 Public Sub InstallSubclass(Control As HexEd)
+    
+    If Not SUBCLASS_ENABLED Then Exit Sub
+    
     Dim oldproc As Long
     Dim hWnd As Long
     hWnd = Control.hWnd
@@ -88,6 +96,9 @@ Public Sub InstallSubclass(Control As HexEd)
 End Sub
 
 Public Sub UnInstallSubclass(Control As HexEd)
+
+    If Not SUBCLASS_ENABLED Then Exit Sub
+    
     Dim oldproc As Long
     Dim hWnd As Long
     hWnd = Control.hWndCanvas

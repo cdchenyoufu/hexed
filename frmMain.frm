@@ -18,8 +18,8 @@ Begin VB.Form frmEditor
       TabStop         =   0   'False
       Top             =   0
       Width           =   8295
-      _extentx        =   14631
-      _extenty        =   14420
+      _ExtentX        =   14631
+      _ExtentY        =   14420
    End
    Begin VB.Menu mnuFile 
       Caption         =   "File"
@@ -29,23 +29,38 @@ Begin VB.Form frmEditor
       Begin VB.Menu mnuSave 
          Caption         =   "Save (Ctrl+S)"
       End
-      Begin VB.Menu mnuAbout 
-         Caption         =   "About"
-      End
    End
    Begin VB.Menu mnuEdit 
       Caption         =   "Edit"
+      Begin VB.Menu mnuCopy 
+         Caption         =   "Copy (Ctrl+C)"
+      End
+      Begin VB.Menu mnuCut 
+         Caption         =   "Cut (Ctrl+X)"
+      End
+      Begin VB.Menu mnuPaste 
+         Caption         =   "Paste (Ctrl+V)"
+      End
+      Begin VB.Menu mnuOverWrite 
+         Caption         =   "OverWrite (Ctrl+B)"
+      End
+      Begin VB.Menu mnuCopyHexCodes 
+         Caption         =   "Copy HexCodes (F4)"
+      End
+      Begin VB.Menu mnuSpacer2 
+         Caption         =   "-"
+      End
+      Begin VB.Menu mnuDelete 
+         Caption         =   "Delete (Del)"
+      End
       Begin VB.Menu mnuInsert 
          Caption         =   "Insert (INS)"
       End
       Begin VB.Menu mnuUndo 
          Caption         =   "Undo (CTRL+Z)"
       End
-      Begin VB.Menu mnuCopyHexCodes 
-         Caption         =   "Copy HexCodes"
-      End
       Begin VB.Menu mnuSearch 
-         Caption         =   "Search"
+         Caption         =   "Search (Ctrl+F)"
       End
       Begin VB.Menu mnuSpacer 
          Caption         =   "-"
@@ -57,7 +72,16 @@ Begin VB.Form frmEditor
          Caption         =   "Goto Next BookMark (F2)"
       End
       Begin VB.Menu mnuShowBookMarks 
-         Caption         =   "Show BookMarks"
+         Caption         =   "Show BookMarks (F3)"
+      End
+   End
+   Begin VB.Menu mnuTools 
+      Caption         =   "Tools"
+      Begin VB.Menu mnuAbout 
+         Caption         =   "About"
+      End
+      Begin VB.Menu mnuHelp 
+         Caption         =   "Help"
       End
    End
 End
@@ -67,8 +91,6 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
-'todo: copy from character pane inserts 0x03..have to kill that..(not from hex char pane)
-'      add ctrl+B write buffer (paste over)
 
 Private Sub Form_Activate()
     Me.HexEditor.SetFocus
@@ -79,7 +101,9 @@ Private Sub Form_GotFocus()
 End Sub
 
 Private Sub Form_Load()
+   FormPos Me, True
    Me.Visible = True
+   
    'mnuOpen.Visible = isIDE() 'enable this in release
 End Sub
 
@@ -89,6 +113,7 @@ Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
         answer = MsgBox("Save changes?", vbYesNoCancel Or vbExclamation, "VB Hexedit")
         If answer = vbYes Then Me.HexEditor.Save
     End If
+    FormPos Me, True, True
 End Sub
 
 Private Sub Form_Resize()
@@ -103,8 +128,8 @@ End Sub
 
 Private Sub HexEditor_RightClick()
     'mnuOpen.Visible = Not HexEditor.ReadOnly
-    mnuSave.Visible = Not HexEditor.ReadOnly
-    PopupMenu mnuFile
+    'mnuSave.Visible = Not HexEditor.ReadOnly
+    'PopupMenu mnuFile
 End Sub
 
 Private Sub mnuAbout_Click()
@@ -115,13 +140,29 @@ Private Sub mnuAddBookMark_Click()
     HexEditor.ToggleBookmark HexEditor.SelStart
 End Sub
 
+Private Sub mnuCopy_Click()
+    HexEditor.DoCopy
+End Sub
+
 Private Sub mnuCopyHexCodes_Click()
    Clipboard.Clear
    Clipboard.SetText HexEditor.SelTextAsHexCodes
 End Sub
 
+Private Sub mnuCut_Click()
+    HexEditor.DoCut
+End Sub
+
+Private Sub mnuDelete_Click()
+    HexEditor.DoDelete
+End Sub
+
 Private Sub mnuGotoNextBookMark_Click()
     HexEditor.GotoNextBookmark
+End Sub
+
+Private Sub mnuHelp_Click()
+    HexEditor.ShowHelp
 End Sub
 
 Private Sub mnuInsert_Click()
@@ -130,6 +171,18 @@ End Sub
 
 Private Sub mnuOpen_Click()
     HexEditor.ShowOpen
+End Sub
+
+Private Sub mnuOverWrite_Click()
+    HexEditor.DoPasteOver
+End Sub
+
+Private Sub mnuPaste_Click()
+    HexEditor.DoPaste
+End Sub
+
+Private Sub mnuSave_Click()
+    HexEditor.Save
 End Sub
 
 Private Sub mnuSearch_Click()

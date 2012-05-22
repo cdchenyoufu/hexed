@@ -130,7 +130,7 @@ Private Sub Search(buf() As Byte, base As Long)
     Set mc = d.Execute(b)
     
     For Each m In mc
-        push ret(), (base + m.FirstIndex - 1) & "," & Replace(m.Value, Chr(0), Empty)
+        push ret(), (base + m.FirstIndex - 1) & "," & toCharDump(m.Value)
     Next
     
 End Sub

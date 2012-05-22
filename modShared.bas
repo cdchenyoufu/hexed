@@ -108,3 +108,37 @@ Function toHexString(ByVal data As String, doUnicode As Boolean, Optional prefix
     toHexString = r
     
 End Function
+
+Function toCharDump(ByVal data As String) As String
+    
+    If Len(data) = 0 Then Exit Function
+    
+    Dim b() As Byte
+    Dim r As String
+    Dim i As Long
+    Dim asciiCount As Long
+    
+    b() = StrConv(data, vbFromUnicode, LANG_US)
+    
+    For i = 0 To UBound(b)
+        If b(i) >= 32 And b(i) <= 127 Then
+            r = r & Chr(b(i))
+            asciiCount = asciiCount + 1
+        Else
+            r = r & "."
+        End If
+    Next
+    
+    If pcent(Len(data), asciiCount) < 30 Then
+        toCharDump = toHexString(data, False, " ")
+    Else
+        toCharDump = r
+    End If
+    
+End Function
+
+
+Private Function pcent(max, cnt) As Long
+    On Error Resume Next
+    pcent = (cnt / max) * 100
+End Function
