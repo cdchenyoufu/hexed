@@ -5,6 +5,7 @@ Begin VB.Form frmFind
    ClientLeft      =   60
    ClientTop       =   345
    ClientWidth     =   5850
+   Icon            =   "frmFind.frx":0000
    LinkTopic       =   "Form1"
    ScaleHeight     =   1455
    ScaleWidth      =   5850

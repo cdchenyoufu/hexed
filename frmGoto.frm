@@ -5,6 +5,7 @@ Begin VB.Form frmGoto
    ClientLeft      =   60
    ClientTop       =   345
    ClientWidth     =   4845
+   Icon            =   "frmGoto.frx":0000
    LinkTopic       =   "Form1"
    ScaleHeight     =   1485
    ScaleWidth      =   4845

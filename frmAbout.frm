@@ -6,6 +6,7 @@ Begin VB.Form frmAbout
    ClientLeft      =   45
    ClientTop       =   330
    ClientWidth     =   10995
+   Icon            =   "frmAbout.frx":0000
    LinkTopic       =   "Form1"
    MaxButton       =   0   'False
    MinButton       =   0   'False
@@ -67,12 +68,14 @@ Sub ShowHelp()
     Dim r()
     
     push r, "Supported commands:\n"
-    push r, "Copy (Ctrl+C),\n Paste (Ctrl+V),\n Delete (DEL),\n Insert (INS),\n Write (Ctrl+B)"
+    push r, "Save (Ctrl+S),\n Copy (Ctrl+C),\n Paste (Ctrl+V),\n Delete (DEL),\n Insert (INS),\n Write (Ctrl+B)"
     push r, "Open (Ctrl+O),\n Undo (Ctrl+Z),\n Find (Ctrl+F),\n Help (F1)"
     push r, "Toggle BookMark (Shift+F2),\n GoToNextBookMark (F2),\n ShowBookMarks (F3)"
     push r, "Copy Hex Codes (F4),\n About (F5)\n Goto Offset (Ctrl+G)"
     
-    push r, "\nYou can copy data from either the hex or char panes"
+    push r, "\nYou can copy data from either the hex or char panes."
+    push r, "The control can also be set to operate in ReadOnly mode in which case"
+    push r, "not all commands will be available."
     
     
     Dim tmp

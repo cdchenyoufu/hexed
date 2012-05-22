@@ -6,6 +6,7 @@ Begin VB.Form frmOffsetList
    ClientLeft      =   60
    ClientTop       =   345
    ClientWidth     =   7245
+   Icon            =   "frmOffsetList.frx":0000
    LinkTopic       =   "Form1"
    ScaleHeight     =   3975
    ScaleWidth      =   7245
@@ -97,7 +98,7 @@ Function LoadBookMarks(he As HexEd)
     Next
     
     Me.Visible = True
-    
+    Form_Load
 End Function
 
 
@@ -123,6 +124,7 @@ Function LoadList(he As HexEd, data() As String)
         
     Me.Caption = lv.ListItems.Count & " occurances found.."
     Me.Visible = True
+    Form_Load
     
 End Function
 
@@ -204,7 +206,7 @@ Private Sub mnuExportList_Click()
     Dim dlg As New clsCmnDlg2
     Dim f As String
     On Error Resume Next
-    f = dlg.SaveDialog(AllFiles, , , , Me.hwnd, IIf(vMode = bookMarkList, "bookmarks.bml", "results.txt"))
+    f = dlg.SaveDialog(AllFiles, , , , Me.hWnd, IIf(vMode = bookMarkList, "bookmarks.bml", "results.txt"))
     If Len(f) = 0 Then Exit Sub
     Dim li As ListItem
     Dim tmp As String
@@ -250,7 +252,7 @@ Private Sub mnuImportList_Click()
     
     On Error Resume Next
     
-    f = dlg.OpenDialog(AllFiles, , , Me.hwnd)
+    f = dlg.OpenDialog(AllFiles, , , Me.hWnd)
     If Len(f) = 0 Then Exit Sub
     Set dlg = Nothing
     

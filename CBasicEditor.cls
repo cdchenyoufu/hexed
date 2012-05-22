@@ -13,9 +13,9 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Private myForm As frmEditor
 
-Property Get Editor() As HexEd
-    Set Editor = myForm.HexEditor
-End Property
+Function GetEditor() As HexEd
+    Set GetEditor = myForm.HexEditor
+End Function
 
 'Public Function LoadFile(fpath As String, Optional ViewOnly As Boolean = True) As Boolean
 '    LoadFile = myForm.HexEditor.LoadFile(fpath, ViewOnly)

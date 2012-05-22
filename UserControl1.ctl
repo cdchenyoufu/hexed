@@ -11,6 +11,7 @@ Begin VB.UserControl HexEd
    ScaleHeight     =   416
    ScaleMode       =   3  'Pixel
    ScaleWidth      =   1078
+   ToolboxBitmap   =   "UserControl1.ctx":0000
    Begin rhexed.hScrollXL hScrollAscii 
       Height          =   255
       Left            =   8880
@@ -129,8 +130,24 @@ Begin VB.UserControl HexEd
    End
    Begin VB.Menu mnuPopup 
       Caption         =   "mnuPopup"
-      Begin VB.Menu mnuCopy 
-         Caption         =   "Copy (Ctrl+G)"
+      Visible         =   0   'False
+      Begin VB.Menu mnuCopy2 
+         Caption         =   "Copy (Ctrl+C)"
+      End
+      Begin VB.Menu mnuCopyHex2 
+         Caption         =   "Copy Hex Codes (F4)"
+      End
+      Begin VB.Menu mnuSearch2 
+         Caption         =   "Search (Ctrl+F)"
+      End
+      Begin VB.Menu mnuGoto2 
+         Caption         =   "Goto (Ctrl+G)"
+      End
+      Begin VB.Menu mnuShowBookMarks2 
+         Caption         =   "Show BookMarks (F3)"
+      End
+      Begin VB.Menu mnuHelp2 
+         Caption         =   "Help (F1)"
       End
    End
 End
@@ -657,6 +674,31 @@ End Sub
 
 
 
+
+Private Sub mnuCopy2_Click()
+    Me.DoCopy
+End Sub
+
+Private Sub mnuCopyHex2_Click()
+    Clipboard.Clear
+    Clipboard.SetText Me.SelTextAsHexCodes
+End Sub
+
+Private Sub mnuGoto2_Click()
+    Me.ShowGoto
+End Sub
+
+Private Sub mnuHelp2_Click()
+    Me.ShowHelp
+End Sub
+
+Private Sub mnuSearch2_Click()
+    Me.ShowFind
+End Sub
+
+Private Sub mnuShowBookMarks2_Click()
+    Me.ShowBookMarks
+End Sub
 
 Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
     If Ambient.UserMode = True Then
@@ -1185,10 +1227,11 @@ KeyCount = KeyCount + 1
         Case vbKeyC: If Shift = 2 Then DoCopy
         Case vbKeyF: If Shift = 2 Then ShowFind
         Case vbKeyG: If Shift = 2 Then ShowGoto
+        Case vbKeyS: If Shift = 2 Then Save
         Case vbKeyX: If Shift = 2 Then DoCut
         Case vbKeyV: If Shift = 2 Then DoPaste
         Case vbKeyZ: If Shift = 2 Then DoUndo
-        Case vbKeyO:  If Shift = 2 Then ShowOpen
+        Case vbKeyO:  If Shift = 2 Then ShowOpen , ReadOnly
     End Select
 End Sub
 

@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{71532E87-B06E-431D-AC3A-686170A406ED}#2.0#0"; "hexed.ocx"
+Object = "{71532E87-B06E-431D-AC3A-686170A406ED}#2.1#0"; "hexed.ocx"
 Begin VB.Form Form1 
    Caption         =   "Form1"
    ClientHeight    =   7380
@@ -36,7 +36,11 @@ Attribute VB_Exposed = False
 Private Sub Command1_Click()
     Dim edit As New CBasicEditor
     
-    Call edit.Editor.LoadFile("c:\_jbig2.data", True)
+    edit.GetEditor.LoadFile "c:\_jbig2.data", True
     
     
+End Sub
+
+Private Sub Form_Load()
+    HexEd1.ReadOnly = True
 End Sub

@@ -6,6 +6,7 @@ Begin VB.Form frmInsert
    ClientLeft      =   45
    ClientTop       =   285
    ClientWidth     =   3480
+   Icon            =   "frmInsert.frx":0000
    LinkTopic       =   "Form2"
    MaxButton       =   0   'False
    MinButton       =   0   'False

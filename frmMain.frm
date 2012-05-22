@@ -155,10 +155,6 @@ Private Sub HexEditor_Loaded()
     If HexEditor.ReadOnly Then Me.Caption = Me.Caption & " - Read Only"
 End Sub
 
-Private Sub HexEditor_RightClick()
-    PopupMenu mnuPopup
-End Sub
-
 Private Sub mnuAbout_Click()
     HexEditor.ShowAbout
 End Sub
@@ -169,14 +165,6 @@ End Sub
 
 Private Sub mnuCopy_Click()
     HexEditor.DoCopy
-End Sub
-
-Private Sub mnuCopy2_Click()
-    mnuCopy_Click
-End Sub
-
-Private Sub mnuCopyHex2_Click()
-    mnuCopyHexCodes_Click
 End Sub
 
 Private Sub mnuCopyHexCodes_Click()
@@ -196,20 +184,12 @@ Private Sub mnuGoto_Click()
     HexEditor.ShowGoto
 End Sub
 
-Private Sub mnuGoto2_Click()
-    mnuGoto_Click
-End Sub
-
 Private Sub mnuGotoNextBookMark_Click()
     HexEditor.GotoNextBookmark
 End Sub
 
 Private Sub mnuHelp_Click()
     HexEditor.ShowHelp
-End Sub
-
-Private Sub mnuHelp2_Click()
-    mnuHelp_Click
 End Sub
 
 Private Sub mnuInsert_Click()
@@ -235,17 +215,9 @@ End Sub
 Private Sub mnuSearch_Click()
      HexEditor.ShowFind
 End Sub
-
-Private Sub mnuSearch2_Click()
-    mnuSearch_Click
-End Sub
-
+ 
 Private Sub mnuShowBookMarks_Click()
     HexEditor.ShowBookMarks
-End Sub
-
-Private Sub mnuShowBookMarks2_Click()
-    mnuShowBookMarks_Click
 End Sub
 
 Private Sub mnuUndo_Click()
