@@ -10,7 +10,7 @@ Attribute VB_Name = "CBasicEditor"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
-Attribute VB_Exposed = False
+Attribute VB_Exposed = True
 Private myForm As frmEditor
 
 Property Get Editor() As HexEd
@@ -31,6 +31,7 @@ End Property
 
 Private Sub Class_Initialize()
     Set myForm = New frmEditor
+    myForm.Visible = True
 End Sub
 
 

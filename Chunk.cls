@@ -8,14 +8,14 @@ BEGIN
 END
 Attribute VB_Name = "Chunk"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = True
+Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
-Attribute VB_Exposed = False
+Attribute VB_Exposed = True
 Option Explicit
 
 Public DataName As String
 Public StatusName As String
-Public Filename As String
+Public filename As String
 Public NewFilename As String
 
 Public size As Long
@@ -112,7 +112,7 @@ Public Sub Load()
     If mInitialized = False Then
         'this chunk has not been read yet
             ReDim buffer(size - 1)
-            Open Filename For Binary As #id
+            Open filename For Binary As #id
             Get #id, offset + 1, buffer
             Close #id
             
@@ -200,7 +200,7 @@ Private Sub Class_Terminate()
 End Sub
 
 
-Public Sub InsertData(ByVal pos As Long, data() As Byte)
+Public Sub InsertData(ByVal Pos As Long, data() As Byte)
     Dim tmp As String
     Dim ltmp As String
     Dim rtmp As String
@@ -208,7 +208,7 @@ Public Sub InsertData(ByVal pos As Long, data() As Byte)
     Dim insertstatus As String
     
     '//safety .. bailout if pos is less than 0
-    If pos < 0 Then Exit Sub
+    If Pos < 0 Then Exit Sub
     
     
     If UBound(mData) = -1 Then
@@ -222,19 +222,19 @@ Public Sub InsertData(ByVal pos As Long, data() As Byte)
     End If
     
     
-    pos = pos - offset
+    Pos = Pos - offset
 
     insert = StrConv(data(), vbUnicode, LANG_US)
     tmp = StrConv(mData, vbUnicode, LANG_US)
-    ltmp = Mid(tmp, 1, pos)
-    rtmp = Mid(tmp, pos + 1)
+    ltmp = Mid(tmp, 1, Pos)
+    rtmp = Mid(tmp, Pos + 1)
     tmp = ltmp & insert & rtmp
     mData = StrConv(tmp, vbFromUnicode, LANG_US)
 
     insertstatus = String(Len(insert), Chr(1))
     tmp = StrConv(mStatus, vbUnicode, LANG_US)
-    ltmp = Mid(tmp, 1, pos)
-    rtmp = Mid(tmp, pos + 1)
+    ltmp = Mid(tmp, 1, Pos)
+    rtmp = Mid(tmp, Pos + 1)
     tmp = ltmp & insertstatus & rtmp
     mStatus = StrConv(tmp, vbFromUnicode, LANG_US)
     mIsDirty = True
@@ -243,25 +243,25 @@ Public Sub InsertData(ByVal pos As Long, data() As Byte)
     size = size + UBound(data) + 1
 End Sub
 
-Public Sub InsertDataStatus(ByVal pos As Long, data() As Byte, Status() As Byte)
+Public Sub InsertDataStatus(ByVal Pos As Long, data() As Byte, Status() As Byte)
     Dim tmp As String
     Dim ltmp As String
     Dim rtmp As String
     Dim insert As String
     Dim insertstatus As String
-    pos = pos - offset
+    Pos = Pos - offset
 
     insert = StrConv(data(), vbUnicode, LANG_US)
     tmp = StrConv(mData, vbUnicode, LANG_US)
-    ltmp = Mid(tmp, 1, pos)
-    rtmp = Mid(tmp, pos + 1)
+    ltmp = Mid(tmp, 1, Pos)
+    rtmp = Mid(tmp, Pos + 1)
     tmp = ltmp & insert & rtmp
     mData = StrConv(tmp, vbFromUnicode, LANG_US)
 
     insertstatus = StrConv(Status(), vbUnicode, LANG_US)
     tmp = StrConv(mStatus, vbUnicode, LANG_US)
-    ltmp = Mid(tmp, 1, pos)
-    rtmp = Mid(tmp, pos + 1)
+    ltmp = Mid(tmp, 1, Pos)
+    rtmp = Mid(tmp, Pos + 1)
     tmp = ltmp & insertstatus & rtmp
     mStatus = StrConv(tmp, vbFromUnicode, LANG_US)
     mIsDirty = True
@@ -271,25 +271,25 @@ Public Sub InsertDataStatus(ByVal pos As Long, data() As Byte, Status() As Byte)
 End Sub
 
 
-Public Sub DeleteData(ByVal pos As Long, ByVal length As Long)
+Public Sub DeleteData(ByVal Pos As Long, ByVal length As Long)
    Dim tmp As String
     Dim ltmp As String
     Dim rtmp As String
     Dim insert As String
     Dim insertstatus As String
-    pos = pos - offset
+    Pos = Pos - offset
 
-    If pos - 1 + length > size Then Exit Sub
+    If Pos - 1 + length > size Then Exit Sub
 
     tmp = StrConv(mData, vbUnicode, LANG_US)
-    ltmp = Mid(tmp, 1, pos)
-    rtmp = Mid(tmp, pos + 1 + length)
+    ltmp = Mid(tmp, 1, Pos)
+    rtmp = Mid(tmp, Pos + 1 + length)
     tmp = ltmp & rtmp
     mData = StrConv(tmp, vbFromUnicode, LANG_US)
 
     tmp = StrConv(mStatus, vbUnicode, LANG_US)
-    ltmp = Mid(tmp, 1, pos)
-    rtmp = Mid(tmp, pos + 1 + length)
+    ltmp = Mid(tmp, 1, Pos)
+    rtmp = Mid(tmp, Pos + 1 + length)
     tmp = ltmp & rtmp
     mStatus = StrConv(tmp, vbFromUnicode, LANG_US)
     mIsDirty = True
@@ -305,7 +305,7 @@ Public Sub Save()
     Me.Load
     Dim id As Long
     id = FreeFile
-    Open Filename For Binary As #id
+    Open filename For Binary As #id
     Put #id, offset + 1, mData
     Close #id
     Me.UnLoad

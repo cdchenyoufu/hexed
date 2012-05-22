@@ -1,28 +1,37 @@
 Attribute VB_Name = "modShared"
 Option Explicit
 
-'Public Windows As Collection
-'Public CompareWindows As Collection
-'Public DiffPos As Long
+Declare Function GetTempPath Lib "kernel32" Alias "GetTempPathA" (ByVal nBufferLength As Long, ByVal lpBuffer As String) As Long
+Private Declare Sub SetWindowPos Lib "user32" (ByVal hwnd As Long, ByVal _
+    hWndInsertAfter As Long, ByVal x As Long, ByVal Y As Long, ByVal cx _
+    As Long, ByVal cy As Long, ByVal wFlags As Long)
+    
+Private Const HWND_TOPMOST = -1
+Private Const HWND_NOTOPMOST = -2
+Private Const SWP_SHOWWINDOW = &H40
+Public Const MAX_PATH = 260
 Global Const LANG_US = &H409
-
 'Public Const ChunkSize As Long = 30000
 Public ChunkSize As Long
 
-Declare Function GetTempPath Lib "kernel32" Alias "GetTempPathA" (ByVal nBufferLength As Long, ByVal lpBuffer As String) As Long
-Public Const MAX_PATH = 260
+Public Function SetTopMost(f As Form, Optional onTop As Boolean = True)
+    Dim flag As Long
+    flag = IIf(onTop, HWND_TOPMOST, HWND_NOTOPMOST)
+    SetWindowPos f.hwnd, flag, f.Left / 15, f.Top / 15, f.Width / 15, f.Height / 15, SWP_SHOWWINDOW
+End Function
+
 
 Public Function GetTmpPath()
-Dim strFolder As String
-Dim lngResult As Long
-strFolder = String(MAX_PATH, 0)
-lngResult = GetTempPath(MAX_PATH, strFolder)
-If lngResult <> 0 Then
-    GetTmpPath = Left(strFolder, InStr(strFolder, _
-    Chr(0)) - 1)
-Else
-    GetTmpPath = ""
-End If
+    Dim strFolder As String
+    Dim lngResult As Long
+    strFolder = String(MAX_PATH, 0)
+    lngResult = GetTempPath(MAX_PATH, strFolder)
+    If lngResult <> 0 Then
+        GetTmpPath = Left(strFolder, InStr(strFolder, _
+        Chr(0)) - 1)
+    Else
+        GetTmpPath = ""
+    End If
 End Function
 
 Sub SaveMySetting(key, Value)
@@ -138,7 +147,7 @@ Function toCharDump(ByVal data As String) As String
 End Function
 
 
-Private Function pcent(max, cnt) As Long
+Private Function pcent(Max, cnt) As Long
     On Error Resume Next
-    pcent = (cnt / max) * 100
+    pcent = (cnt / Max) * 100
 End Function

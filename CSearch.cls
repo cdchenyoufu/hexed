@@ -10,7 +10,7 @@ Attribute VB_Name = "CSearch"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
-Attribute VB_Exposed = False
+Attribute VB_Exposed = True
 'License:   GPL
 'Copyright: 2005 iDefense a Verisign Company
 'Site:      http://labs.idefense.com

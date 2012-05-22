@@ -22,6 +22,7 @@ Class=CSearch; CSearch.cls
 Form=frmOffsetList.frm
 Form=frmFind.frm
 Class=CBasicEditor; CBasicEditor.cls
+Form=frmGoto.frm
 Startup="frmEditor"
 HelpFile=""
 Title="Vb HexED"

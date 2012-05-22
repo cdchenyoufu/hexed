@@ -153,13 +153,14 @@ End Sub
 
 Private Sub Form_Load()
     FormPos Me, True
+    SetTopMost Me
 End Sub
 
 Private Sub Form_Unload(Cancel As Integer)
     FormPos Me, True, True
 End Sub
 
-Private Sub lv_MouseUp(Button As Integer, Shift As Integer, x As Single, y As Single)
+Private Sub lv_MouseUp(Button As Integer, Shift As Integer, x As Single, Y As Single)
     If Button = 2 Then
         mnuEditDescription.Visible = (vMode = bookMarkList)
         PopupMenu mnuPopup
@@ -203,7 +204,7 @@ Private Sub mnuExportList_Click()
     Dim dlg As New clsCmnDlg2
     Dim f As String
     On Error Resume Next
-    f = dlg.SaveDialog(AllFiles, , , , Me.hWnd, IIf(vMode = bookMarkList, "bookmarks.bml", "results.txt"))
+    f = dlg.SaveDialog(AllFiles, , , , Me.hwnd, IIf(vMode = bookMarkList, "bookmarks.bml", "results.txt"))
     If Len(f) = 0 Then Exit Sub
     Dim li As ListItem
     Dim tmp As String
@@ -249,7 +250,7 @@ Private Sub mnuImportList_Click()
     
     On Error Resume Next
     
-    f = dlg.OpenDialog(AllFiles, , , Me.hWnd)
+    f = dlg.OpenDialog(AllFiles, , , Me.hwnd)
     If Len(f) = 0 Then Exit Sub
     Set dlg = Nothing
     

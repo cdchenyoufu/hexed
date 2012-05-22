@@ -94,6 +94,7 @@ Private Sub Command1_Click()
 End Sub
 
 Private Sub Form_Load()
+    SetTopMost Me
     FormPos Me
 End Sub
 

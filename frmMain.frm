@@ -11,15 +11,15 @@ Begin VB.Form frmEditor
    ScaleHeight     =   8595
    ScaleWidth      =   11880
    Visible         =   0   'False
-   Begin prjVbHex.HexEd HexEditor 
+   Begin rhexed.HexEd HexEditor 
       Height          =   8175
       Left            =   0
       TabIndex        =   0
       TabStop         =   0   'False
       Top             =   0
       Width           =   8295
-      _ExtentX        =   14631
-      _ExtentY        =   14420
+      _extentx        =   14631
+      _extenty        =   14420
    End
    Begin VB.Menu mnuFile 
       Caption         =   "File"
@@ -62,6 +62,9 @@ Begin VB.Form frmEditor
       Begin VB.Menu mnuSearch 
          Caption         =   "Search (Ctrl+F)"
       End
+      Begin VB.Menu mnuGoto 
+         Caption         =   "Goto (Ctrl+G)"
+      End
       Begin VB.Menu mnuSpacer 
          Caption         =   "-"
       End
@@ -78,10 +81,32 @@ Begin VB.Form frmEditor
    Begin VB.Menu mnuTools 
       Caption         =   "Tools"
       Begin VB.Menu mnuAbout 
-         Caption         =   "About"
+         Caption         =   "About (F5)"
       End
       Begin VB.Menu mnuHelp 
-         Caption         =   "Help"
+         Caption         =   "Help (F1)"
+      End
+   End
+   Begin VB.Menu mnuPopup 
+      Caption         =   "mnuPopup"
+      Visible         =   0   'False
+      Begin VB.Menu mnuCopy2 
+         Caption         =   "Copy (Ctrl+C)"
+      End
+      Begin VB.Menu mnuCopyHex2 
+         Caption         =   "Copy Hex Codes (F4)"
+      End
+      Begin VB.Menu mnuSearch2 
+         Caption         =   "Search (Ctrl+F)"
+      End
+      Begin VB.Menu mnuGoto2 
+         Caption         =   "Goto (Ctrl+G)"
+      End
+      Begin VB.Menu mnuShowBookMarks2 
+         Caption         =   "Show BookMarks (F3)"
+      End
+      Begin VB.Menu mnuHelp2 
+         Caption         =   "Help (F1)"
       End
    End
 End
@@ -93,18 +118,18 @@ Attribute VB_Exposed = False
 Option Explicit
 
 Private Sub Form_Activate()
+    On Error Resume Next
     Me.HexEditor.SetFocus
 End Sub
 
 Private Sub Form_GotFocus()
+    On Error Resume Next
     Me.HexEditor.SetFocus
 End Sub
 
 Private Sub Form_Load()
    FormPos Me, True
    Me.Visible = True
-   
-   'mnuOpen.Visible = isIDE() 'enable this in release
 End Sub
 
 Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
@@ -126,10 +151,12 @@ Private Sub HexEditor_Dirty()
     'Me.Caption = Me.title & "  *"
 End Sub
 
+Private Sub HexEditor_Loaded()
+    If HexEditor.ReadOnly Then Me.Caption = Me.Caption & " - Read Only"
+End Sub
+
 Private Sub HexEditor_RightClick()
-    'mnuOpen.Visible = Not HexEditor.ReadOnly
-    'mnuSave.Visible = Not HexEditor.ReadOnly
-    'PopupMenu mnuFile
+    PopupMenu mnuPopup
 End Sub
 
 Private Sub mnuAbout_Click()
@@ -142,6 +169,14 @@ End Sub
 
 Private Sub mnuCopy_Click()
     HexEditor.DoCopy
+End Sub
+
+Private Sub mnuCopy2_Click()
+    mnuCopy_Click
+End Sub
+
+Private Sub mnuCopyHex2_Click()
+    mnuCopyHexCodes_Click
 End Sub
 
 Private Sub mnuCopyHexCodes_Click()
@@ -157,12 +192,24 @@ Private Sub mnuDelete_Click()
     HexEditor.DoDelete
 End Sub
 
+Private Sub mnuGoto_Click()
+    HexEditor.ShowGoto
+End Sub
+
+Private Sub mnuGoto2_Click()
+    mnuGoto_Click
+End Sub
+
 Private Sub mnuGotoNextBookMark_Click()
     HexEditor.GotoNextBookmark
 End Sub
 
 Private Sub mnuHelp_Click()
     HexEditor.ShowHelp
+End Sub
+
+Private Sub mnuHelp2_Click()
+    mnuHelp_Click
 End Sub
 
 Private Sub mnuInsert_Click()
@@ -189,8 +236,16 @@ Private Sub mnuSearch_Click()
      HexEditor.ShowFind
 End Sub
 
+Private Sub mnuSearch2_Click()
+    mnuSearch_Click
+End Sub
+
 Private Sub mnuShowBookMarks_Click()
     HexEditor.ShowBookMarks
+End Sub
+
+Private Sub mnuShowBookMarks2_Click()
+    mnuShowBookMarks_Click
 End Sub
 
 Private Sub mnuUndo_Click()

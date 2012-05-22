@@ -70,7 +70,7 @@ Sub ShowHelp()
     push r, "Copy (Ctrl+C),\n Paste (Ctrl+V),\n Delete (DEL),\n Insert (INS),\n Write (Ctrl+B)"
     push r, "Open (Ctrl+O),\n Undo (Ctrl+Z),\n Find (Ctrl+F),\n Help (F1)"
     push r, "Toggle BookMark (Shift+F2),\n GoToNextBookMark (F2),\n ShowBookMarks (F3)"
-    push r, "Copy Hex Codes (F4),\n About (F5)"
+    push r, "Copy Hex Codes (F4),\n About (F5)\n Goto Offset (Ctrl+G)"
     
     push r, "\nYou can copy data from either the hex or char panes"
     
