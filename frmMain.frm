@@ -18,8 +18,8 @@ Begin VB.Form frmEditor
       TabStop         =   0   'False
       Top             =   0
       Width           =   8295
-      _extentx        =   14631
-      _extenty        =   14420
+      _ExtentX        =   14631
+      _ExtentY        =   14420
    End
    Begin VB.Menu mnuFile 
       Caption         =   "File"
@@ -28,6 +28,9 @@ Begin VB.Form frmEditor
       End
       Begin VB.Menu mnuSave 
          Caption         =   "Save (Ctrl+S)"
+      End
+      Begin VB.Menu mnuSaveAs 
+         Caption         =   "Save As"
       End
    End
    Begin VB.Menu mnuEdit 
@@ -148,11 +151,15 @@ Private Sub Form_Resize()
 End Sub
 
 Private Sub HexEditor_Dirty()
-    'Me.Caption = Me.title & "  *"
+    If Right(Me.Caption, 1) <> "*" Then Me.Caption = Me.Caption & " *"
 End Sub
 
 Private Sub HexEditor_Loaded()
-    If HexEditor.ReadOnly Then Me.Caption = Me.Caption & " - Read Only"
+    If HexEditor.ReadOnly Then Me.Caption = Me.Caption & " - Read Only - " & HexEditor.LoadedFile
+End Sub
+
+Private Sub HexEditor_Saved()
+    Me.Caption = "Hexeditor 0.3 - " & HexEditor.LoadedFile
 End Sub
 
 Private Sub mnuAbout_Click()
@@ -210,6 +217,10 @@ End Sub
 
 Private Sub mnuSave_Click()
     HexEditor.Save
+End Sub
+
+Private Sub mnuSaveAs_Click()
+    HexEditor.SaveAs
 End Sub
 
 Private Sub mnuSearch_Click()

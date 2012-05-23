@@ -2,8 +2,8 @@ Attribute VB_Name = "modShared"
 Option Explicit
 
 Declare Function GetTempPath Lib "kernel32" Alias "GetTempPathA" (ByVal nBufferLength As Long, ByVal lpBuffer As String) As Long
-Private Declare Sub SetWindowPos Lib "user32" (ByVal hwnd As Long, ByVal _
-    hWndInsertAfter As Long, ByVal x As Long, ByVal Y As Long, ByVal cx _
+Private Declare Sub SetWindowPos Lib "user32" (ByVal hWnd As Long, ByVal _
+    hWndInsertAfter As Long, ByVal x As Long, ByVal y As Long, ByVal cx _
     As Long, ByVal cy As Long, ByVal wFlags As Long)
     
 Private Const HWND_TOPMOST = -1
@@ -17,9 +17,22 @@ Public ChunkSize As Long
 Public Function SetTopMost(f As Form, Optional onTop As Boolean = True)
     Dim flag As Long
     flag = IIf(onTop, HWND_TOPMOST, HWND_NOTOPMOST)
-    SetWindowPos f.hwnd, flag, f.Left / 15, f.Top / 15, f.Width / 15, f.Height / 15, SWP_SHOWWINDOW
+    SetWindowPos f.hWnd, flag, f.Left / 15, f.Top / 15, f.Width / 15, f.Height / 15, SWP_SHOWWINDOW
 End Function
 
+Public Function FileExists(path) As Boolean
+  If Len(path) = 0 Then Exit Function
+  If Dir(path, vbHidden Or vbNormal Or vbReadOnly Or vbSystem) <> "" Then FileExists = True
+End Function
+
+Public Function FileNameFromPath(fullpath As String) As String
+    On Error Resume Next
+    Dim tmp() As String
+    If InStr(fullpath, "\") > 0 Then
+        tmp = Split(fullpath, "\")
+        FileNameFromPath = CStr(tmp(UBound(tmp)))
+    End If
+End Function
 
 Public Function GetTmpPath()
     Dim strFolder As String

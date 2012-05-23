@@ -22,10 +22,12 @@ Private Chunk1 As Chunk
 Private Chunk2 As Chunk
 Private ReSized As Boolean
 Public size As Long
-Private isMemLoad As Boolean
+Public isMemLoad As Boolean
 
-Public Property Get Filename() As String
-    Filename = mFilename
+Public owner As HexEd
+
+Public Property Get filename() As String
+    filename = mFilename
 End Property
 
 Private Sub Class_Initialize()
@@ -78,13 +80,13 @@ Public Sub LoadFromMemory(bArray As Variant)
     
 End Sub
 
-Public Sub Load(Filename As String)
+Public Sub Load(filename As String)
     Dim FileSize As Long
     Dim NumChunks As Long
     Dim Chunk As Chunk
     Dim i As Long
     
-    FileSize = FileLen(Filename)
+    FileSize = FileLen(filename)
     If FileSize < 1 Then
         MsgBox "File is zero length"
         Exit Sub
@@ -93,7 +95,7 @@ Public Sub Load(Filename As String)
         Exit Sub
     End If
     
-    mFilename = Filename
+    mFilename = filename
     isMemLoad = False
     
     size = FileSize - 1
@@ -101,7 +103,7 @@ Public Sub Load(Filename As String)
     ReDim Chunks(1 To NumChunks)
     For i = 0 To NumChunks - 1
         Set Chunk = New Chunk
-        Chunk.Filename = mFilename
+        Chunk.filename = mFilename
         Chunk.offset = i * ChunkSize
         Chunk.size = ChunkSize
         Chunk.Index = i + 1
@@ -113,7 +115,7 @@ Public Sub Load(Filename As String)
     ReSized = False
 End Sub
 
-Public Sub ActivateChunk(pos As Long)
+Public Sub ActivateChunk(Pos As Long)
     Dim Chunk As Chunk
     Dim i As Long
     'bailout if not loaded
@@ -121,7 +123,7 @@ Public Sub ActivateChunk(pos As Long)
     
     
     If Not Chunk1 Is Nothing Then
-        If pos >= Chunk1.offset And pos <= Chunk1.size + Chunk1.offset - 1 Then
+        If Pos >= Chunk1.offset And Pos <= Chunk1.size + Chunk1.offset - 1 Then
             'chunk already loaded
             Exit Sub
         End If
@@ -130,7 +132,7 @@ Public Sub ActivateChunk(pos As Long)
 
     Dim Current As Long
 
-    Current = GetChunkFromPos(pos)
+    Current = GetChunkFromPos(Pos)
     Set Chunk1 = Chunks(Current)
     Chunk1.Load
     If Current < UBound(Chunks) Then
@@ -141,7 +143,7 @@ Public Sub ActivateChunk(pos As Long)
     End If
 End Sub
 
-Private Function GetChunkFromPos(ByVal pos As Long) As Long
+Private Function GetChunkFromPos(ByVal Pos As Long) As Long
     Dim Upper As Long
     Dim Lower As Long
     Dim Current As Long
@@ -155,11 +157,11 @@ Private Function GetChunkFromPos(ByVal pos As Long) As Long
     Do While Not hit And Upper >= Lower
         Current = Int((Upper + Lower) / 2)
         Set Chunk = Chunks(Current)
-        If pos >= Chunk.offset And pos <= Chunk.offset + Chunk.size Then
+        If Pos >= Chunk.offset And Pos <= Chunk.offset + Chunk.size Then
             hit = True
             GetChunkFromPos = Current   'return pos
             Exit Function
-        ElseIf pos > Chunk.offset + Chunk.size Then
+        ElseIf Pos > Chunk.offset + Chunk.size Then
             Lower = Current + 1
         Else
             Upper = Current - 1
@@ -367,12 +369,62 @@ Private Sub FixOffsets()
     Next
 End Sub
 
+Public Sub SaveAs(Optional fpath As String, Optional defaultfName As String)
+        
+    On Error GoTo hell
+    
+    Dim f As Long
+    Dim dlg As clsCmnDlg2
+    Dim b() As Byte
+    Dim i As Long
+    
+    If Len(fpath) = 0 Then
+        'If Len(fName) = 0 Then fName = "data.bin"
+        Set dlg = New clsCmnDlg2
+        fpath = dlg.SaveDialog(AllFiles, , "Save As...", , , defaultfName)
+        Set dlg = Nothing
+    End If
+    
+    If Len(fpath) = 0 Then Exit Sub
+       
+    If isMemLoad Then
+       If Chunk1 Is Nothing Then Exit Sub
+       f = FreeFile
+       b() = Chunk1.GetDataBytes()
+       Open fpath For Binary As f
+       Put f, , b()
+       Close f
+       mFilename = fpath
+       Chunk1.filename = fpath
+       owner.LoadedFile = fpath
+    Else
+        If FileExists(fpath) Then Kill fpath
+        FileSystem.FileCopy Me.filename, fpath
+        mFilename = fpath
+        owner.LoadedFile = fpath
+        For i = 1 To UBound(Chunks)
+            Chunks(i).filename = fpath
+        Next
+        Save
+    End If
+    
+Exit Sub
+hell:
+    MsgBox "Error in SaveAs: " & Err.Description
+    
+End Sub
+
+
 Public Sub Save()
-    If ReSized Then
+    
+    If isMemLoad Then
+        SaveAs Empty
+    ElseIf ReSized Then
         Call SaveReSized
     Else
         Call SaveNormal
     End If
+    
 End Sub
 
 Private Sub SaveNormal()
@@ -388,7 +440,7 @@ Private Sub SaveNormal()
     Erase Chunks
     Set Chunk1 = Nothing
     Set Chunk2 = Nothing
-    Me.Load Me.Filename
+    Me.Load Me.filename
     'save the file
 End Sub
 
@@ -421,13 +473,13 @@ Private Sub SaveReSized()
     Set Chunk1 = Nothing
     Set Chunk2 = Nothing
 
-    Kill Me.Filename
+    Kill Me.filename
     Err.Clear
     
-    FileSystem.FileCopy NewFilename, Me.Filename
+    FileSystem.FileCopy NewFilename, Me.filename
     Kill NewFilename
     
-    Me.Load Me.Filename
+    Me.Load Me.filename
     
     Screen.MousePointer = vbDefault
     'save the file

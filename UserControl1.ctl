@@ -131,6 +131,9 @@ Begin VB.UserControl HexEd
    Begin VB.Menu mnuPopup 
       Caption         =   "mnuPopup"
       Visible         =   0   'False
+      Begin VB.Menu mnuSaveAs 
+         Caption         =   "Save As"
+      End
       Begin VB.Menu mnuCopy2 
          Caption         =   "Copy (Ctrl+C)"
       End
@@ -219,14 +222,19 @@ Private KeyCount As Long
 Public ReadOnly As Boolean
 Public ForceMemOnlyLoading As Boolean
 Public UseDefaultRightClickMenu As Boolean
+Public AdjustBaseOffset As Long
 '-------------------
 
 Public Event Dirty()
 Public Event RightClick()
 Public Event Loaded()
-
+Public Event Saved()
 
 Private mLoadedFile As String
+
+Friend Property Let LoadedFile(v As String)
+    mLoadedFile = v
+End Property
 
 Property Get LoadedFile() As String
     LoadedFile = mLoadedFile
@@ -313,7 +321,7 @@ End Sub
 
 
 
-Private Sub Ascii_MouseDown(Button As Integer, Shift As Integer, x As Single, Y As Single)
+Private Sub Ascii_MouseDown(Button As Integer, Shift As Integer, x As Single, y As Single)
     Dim Pos As Long
     Dim xx As Long
     Dim yy As Long
@@ -324,7 +332,7 @@ Private Sub Ascii_MouseDown(Button As Integer, Shift As Integer, x As Single, Y 
     x = x + mAsciiOffset * mAsciiWidth
     
     xx = (x - mAsciiWidth - 3) / mAsciiWidth
-    yy = (Y - mLineHeight / 3) / mLineHeight
+    yy = (y - mLineHeight / 3) / mLineHeight
     
     If xx < 0 Then xx = 0
     If yy < 0 Then yy = 0
@@ -346,17 +354,17 @@ Private Sub Ascii_MouseDown(Button As Integer, Shift As Integer, x As Single, Y 
     draw
 End Sub
 
-Private Sub Ascii_MouseMove(Button As Integer, Shift As Integer, x As Single, Y As Single)
+Private Sub Ascii_MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
     Dim Pos As Long
     Dim xx As Long
     Dim yy As Long
     
     If Not mAutoScroll Then Exit Sub
     
-    If Y < 0 Then
+    If y < 0 Then
         mDirection = -1 'up
         If Not mScrolling Then Call DoAutoscroll: Exit Sub
-    ElseIf Y > Ascii.ScaleHeight Then
+    ElseIf y > Ascii.ScaleHeight Then
         mDirection = 1 'down
         If Not mScrolling Then Call DoAutoscroll: Exit Sub
     Else
@@ -366,7 +374,7 @@ Private Sub Ascii_MouseMove(Button As Integer, Shift As Integer, x As Single, Y 
     x = x + mAsciiOffset * mAsciiWidth
     
     xx = (x - mAsciiWidth - 3) / mAsciiWidth
-    yy = (Y - mLineHeight / 3) / mLineHeight
+    yy = (y - mLineHeight / 3) / mLineHeight
     
     If xx < 0 Then xx = 0
     If yy < 0 Then yy = 0
@@ -406,7 +414,7 @@ Private Sub ScrollUp()
 End Sub
 
 
-Private Sub Ascii_MouseUp(Button As Integer, Shift As Integer, x As Single, Y As Single)
+Private Sub Ascii_MouseUp(Button As Integer, Shift As Integer, x As Single, y As Single)
     mAutoScroll = False
     mScrolling = False
     
@@ -528,7 +536,7 @@ Private Sub Ascii_KeyPress(KeyAscii As Integer)
 End Sub
 
 
-Private Sub Canvas_MouseDown(Button As Integer, Shift As Integer, x As Single, Y As Single)
+Private Sub Canvas_MouseDown(Button As Integer, Shift As Integer, x As Single, y As Single)
 
     Dim Pos As Long
     Dim xx As Long
@@ -541,7 +549,7 @@ Private Sub Canvas_MouseDown(Button As Integer, Shift As Integer, x As Single, Y
     xx = (x - mHexWidth / 2) / mHexWidth
     
     'xx = (x - mHexWidth / 2) / mHexWidth
-    yy = (Y - mLineHeight / 3) / mLineHeight
+    yy = (y - mLineHeight / 3) / mLineHeight
     
     If xx < 0 Then xx = 0
     If yy < 0 Then yy = 0
@@ -564,7 +572,7 @@ Private Sub Canvas_MouseDown(Button As Integer, Shift As Integer, x As Single, Y
     draw
 End Sub
 
-Private Sub Canvas_MouseMove(Button As Integer, Shift As Integer, x As Single, Y As Single)
+Private Sub Canvas_MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
 
     Dim Pos As Long
     Dim xx As Long
@@ -573,10 +581,10 @@ Private Sub Canvas_MouseMove(Button As Integer, Shift As Integer, x As Single, Y
     
     If Not mAutoScroll Then Exit Sub
     
-    If Y < 0 Then
+    If y < 0 Then
         mDirection = -1 'up
         If Not mScrolling Then Call DoAutoscroll: Exit Sub
-    ElseIf Y > Canvas.ScaleHeight Then
+    ElseIf y > Canvas.ScaleHeight Then
         mDirection = 1 'down
         If Not mScrolling Then Call DoAutoscroll: Exit Sub
     Else
@@ -587,7 +595,7 @@ Private Sub Canvas_MouseMove(Button As Integer, Shift As Integer, x As Single, Y
     
     'xx = x / mHexWidth
     xx = (x - mHexWidth / 4) / mHexWidth
-    yy = (Y - mLineHeight / 3) / mLineHeight
+    yy = (y - mLineHeight / 3) / mLineHeight
     
     If xx < 0 Then xx = 0
     If yy < 0 Then yy = 0
@@ -606,7 +614,7 @@ Private Sub Canvas_MouseMove(Button As Integer, Shift As Integer, x As Single, Y
 End Sub
 
 
-Private Sub Canvas_MouseUp(Button As Integer, Shift As Integer, x As Single, Y As Single)
+Private Sub Canvas_MouseUp(Button As Integer, Shift As Integer, x As Single, y As Single)
     mScrolling = False
     mAutoScroll = False
     
@@ -692,6 +700,10 @@ Private Sub mnuHelp2_Click()
     Me.ShowHelp
 End Sub
 
+Private Sub mnuSaveAs_Click()
+    Me.SaveAs
+End Sub
+
 Private Sub mnuSearch2_Click()
     Me.ShowFind
 End Sub
@@ -766,7 +778,8 @@ Private Sub UserControl_Initialize()
     Set dcAscii = New VirtualDC
     
     Set mFileHandler = New File
-        
+    Set mFileHandler.owner = Me
+    
     dcCanvas.CreateFromPBOX Canvas
     dcAscii.CreateFromPBOX Ascii
     dcMargin.CreateFromPBOX Margin
@@ -880,7 +893,7 @@ Private Sub DrawNormal()
         
         yPos = i * mLineHeight
         
-        HexLine = Hex(Pos)
+        HexLine = Hex(Pos + AdjustBaseOffset) 'AdjustedBaseOffset is for loading of memory images..
         HexLine = String(mLinenumberSize - Len(HexLine), "0") & HexLine
         
         dcMargin.PrintText HexLine, 5, i * mLineHeight, Margin.ScaleWidth, i * mLineHeight + mLineHeight, 0
@@ -1016,7 +1029,7 @@ End Sub
 
 Private Sub DrawCursors()
     Dim x As Currency
-    Dim Y As Currency
+    Dim y As Currency
     Dim xx As Long
     Dim Pos As Long
     Dim data As String
@@ -1031,21 +1044,21 @@ Private Sub DrawCursors()
     
     If mSelectedPos >= 0 And mSelectedPos <= Me.DataLength + 1 Then
         Pos = mSelectedPos - mPos
-        GetXYfromPos Pos, x, Y
+        GetXYfromPos Pos, x, y
         xx = x * mAsciiWidth - AsciiOffset
         x = x * mHexWidth - CanvasOffset
-        Y = Y * mLineHeight
-        If Y < 0 Then Y = 0
-        If Y > Canvas.ScaleHeight Then Y = Canvas.ScaleHeight
+        y = y * mLineHeight
+        If y < 0 Then y = 0
+        If y > Canvas.ScaleHeight Then y = Canvas.ScaleHeight
         
         If Len(data) = 1 Then data = "0" & data
         
         If mEditMode = 0 Then
-            dcCanvas.FillArea x + 8 + mSelectedCursorPos * mAsciiWidth, Y, x + 8 + mSelectedCursorPos * mAsciiWidth + 2, Y + mLineHeight, vbBlack
-            dcAscii.FillArea xx + 8, Y + mLineHeight - 1, xx + mAsciiWidth + 8, Y + mLineHeight + 1, vbBlack
+            dcCanvas.FillArea x + 8 + mSelectedCursorPos * mAsciiWidth, y, x + 8 + mSelectedCursorPos * mAsciiWidth + 2, y + mLineHeight, vbBlack
+            dcAscii.FillArea xx + 8, y + mLineHeight - 1, xx + mAsciiWidth + 8, y + mLineHeight + 1, vbBlack
         Else
-            dcCanvas.FillArea x + 8, Y + mLineHeight - 1, x + 8 + 2 * mAsciiWidth + 2, Y + mLineHeight + 1, vbBlack
-            dcAscii.FillArea xx + 8, Y - 2, xx + 8 + 2, Y + mLineHeight - 2, vbBlack
+            dcCanvas.FillArea x + 8, y + mLineHeight - 1, x + 8 + 2 * mAsciiWidth + 2, y + mLineHeight + 1, vbBlack
+            dcAscii.FillArea xx + 8, y - 2, xx + 8 + 2, y + mLineHeight - 2, vbBlack
         End If
         
     End If
@@ -1053,7 +1066,7 @@ End Sub
 
 Private Sub DrawBookmarks()
     Dim x As Currency
-    Dim Y As Currency
+    Dim y As Currency
     Dim xx As Long
     Dim Pos As Long
     Dim data As String
@@ -1067,19 +1080,19 @@ Private Sub DrawBookmarks()
     For Each bm In mBookmarks
     
         Pos = bm.Pos - mPos 'mSelectedPos - mPos
-        GetXYfromPos Pos, x, Y
+        GetXYfromPos Pos, x, y
         xx = x * mAsciiWidth - AsciiOffset
         x = x * mHexWidth - CanvasOffset
-        Y = Y * mLineHeight
-        If Y < 0 Then Y = 0
-        If Y > Canvas.ScaleHeight Then Y = Canvas.ScaleHeight
+        y = y * mLineHeight
+        If y < 0 Then y = 0
+        If y > Canvas.ScaleHeight Then y = Canvas.ScaleHeight
         
         If Len(data) = 1 Then data = "0" & data
         
         
-        dcCanvas.FillArea x + 4, Y, x + 4 + mHexWidth, Y + mLineHeight, vbBlack
-        dcCanvas.FillArea x + 5, Y + 1, x + 3 + mHexWidth, Y + mLineHeight - 1, bm.Color
-        dcAscii.FillArea xx + 8, Y, xx + 8 + mAsciiWidth, Y + mLineHeight, bm.Color
+        dcCanvas.FillArea x + 4, y, x + 4 + mHexWidth, y + mLineHeight, vbBlack
+        dcCanvas.FillArea x + 5, y + 1, x + 3 + mHexWidth, y + mLineHeight - 1, bm.Color
+        dcAscii.FillArea xx + 8, y, xx + 8 + mAsciiWidth, y + mLineHeight, bm.Color
     
     Next
         
@@ -1458,9 +1471,9 @@ Public Sub DoUndo()
     
 End Sub
 
-Private Sub GetXYfromPos(ByRef Pos, ByRef x As Currency, ByRef Y As Currency)
-  Y = Pos \ Columns
-  x = Pos - Columns * Y
+Private Sub GetXYfromPos(ByRef Pos, ByRef x As Currency, ByRef y As Currency)
+  y = Pos \ Columns
+  x = Pos - Columns * y
 End Sub
 
 Public Property Get SelText() As String
@@ -1611,7 +1624,7 @@ End Sub
 Public Function LoadString(data As String, Optional ViewOnly As Boolean = True) As Boolean
     Dim b() As Byte
     b() = StrConv(data, vbFromUnicode, LANG_US)
-    LoadString = LoadByteArray(b())
+    LoadString = LoadByteArray(b(), ViewOnly)
 End Function
 
  
@@ -1652,6 +1665,7 @@ Public Function LoadByteArray(bArray As Variant, Optional ViewOnly As Boolean = 
         Set mUndoBuffer = New Collection
         Set mBookmarks = New Collection
         LoadByteArray = True
+        RaiseEvent Loaded
         Exit Function
     End If
     
@@ -1662,7 +1676,7 @@ Public Function LoadByteArray(bArray As Variant, Optional ViewOnly As Boolean = 
     Put f, , b()
     Close f
     
-    LoadByteArray = LoadFile(path)
+    LoadByteArray = LoadFile(path, ViewOnly)
     If LoadByteArray Then RaiseEvent Loaded
     Exit Function
 hell:
@@ -1734,16 +1748,33 @@ Public Property Get IsDirty() As Boolean
     IsDirty = mIsDirty
 End Property
 
+Public Sub SaveAs(Optional fpath As String = Empty, Optional defaultfName As String)
+    
+    If Len(defaultfName) = 0 And Len(LoadedFile) > 0 Then
+        defaultfName = FileNameFromPath(LoadedFile)
+    End If
+    
+    mFileHandler.SaveAs fpath, defaultfName
+    mIsDirty = False
+    Call draw
+    ReadOnly = False
+    RaiseEvent Saved
+    
+End Sub
+
 Public Sub Save()
     
-    If ReadOnly Then
-        'MsgBox "File was opened in readonly mode"
-        Exit Sub
+    If Not mFileHandler.isMemLoad Then
+        If ReadOnly Then
+            'MsgBox "File was opened in readonly mode"
+            Exit Sub
+        End If
     End If
 
     mFileHandler.Save
     mIsDirty = False
     Call draw
+    RaiseEvent Saved
     
 End Sub
 
