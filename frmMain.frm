@@ -65,6 +65,9 @@ Begin VB.Form frmEditor
       Begin VB.Menu mnuSearch 
          Caption         =   "Search (Ctrl+F)"
       End
+      Begin VB.Menu mnuStrings 
+         Caption         =   "Strings"
+      End
       Begin VB.Menu mnuGoto 
          Caption         =   "Goto (Ctrl+G)"
       End
@@ -229,6 +232,22 @@ End Sub
  
 Private Sub mnuShowBookMarks_Click()
     HexEditor.ShowBookMarks
+End Sub
+
+Private Sub mnuStrings_Click()
+    
+    On Error Resume Next
+    
+    Const minLen = 7
+    Dim Ascii() As String
+    Dim uni() As String
+    
+    Ascii() = HexEditor.Search("[\w0-9 /?.\-_=+$\\@!*\(\)#%~`\^&\|\{\}\[\]:;'""<>\,]{" & minLen & ",}")
+    uni() = HexEditor.Search("([\w0-9 /?.\-=+$\\@!\*\(\)#%~`\^&\|\{\}\[\]:;'""<>\,][\x00]){" & minLen & ",}")
+    
+    frmOffsetList.LoadList Me, Ascii
+    frmOffsetList.LoadList Me, uni 'this will append the data...
+    
 End Sub
 
 Private Sub mnuUndo_Click()

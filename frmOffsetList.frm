@@ -140,13 +140,13 @@ Private Sub lv_ItemClick(ByVal Item As MSComctlLib.ListItem)
     Dim b As Bookmark
     
     If vMode = searchList Then
-        owner.ScrollTo CLng(Item.Tag)
+        owner.scrollTo CLng(Item.Tag)
         If Len(Item.SubItems(1)) > 0 Then
             owner.SelLength = Len(Item.SubItems(1))
         End If
     ElseIf vMode = bookMarkList Then
         Set b = Item.Tag
-        owner.ScrollTo b.Pos
+        owner.scrollTo b.Pos
     End If
         
     Set selLi = Item

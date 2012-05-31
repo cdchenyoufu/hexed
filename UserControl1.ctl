@@ -143,6 +143,9 @@ Begin VB.UserControl HexEd
       Begin VB.Menu mnuSearch2 
          Caption         =   "Search (Ctrl+F)"
       End
+      Begin VB.Menu mnuStrings 
+         Caption         =   "Strings"
+      End
       Begin VB.Menu mnuGoto2 
          Caption         =   "Goto (Ctrl+G)"
       End
@@ -223,6 +226,7 @@ Public ReadOnly As Boolean
 Public ForceMemOnlyLoading As Boolean
 Public UseDefaultRightClickMenu As Boolean
 Public AdjustBaseOffset As Long
+Private mVisibleLines As Long
 '-------------------
 
 Public Event Dirty()
@@ -231,6 +235,14 @@ Public Event Loaded()
 Public Event Saved()
 
 Private mLoadedFile As String
+
+Friend Property Get CurrentPosition() As Long
+    CurrentPosition = mPos
+End Property
+
+Friend Property Get VisibleLines() As Long
+        VisibleLines = mVisibleLines
+End Property
 
 Friend Property Let LoadedFile(v As String)
     mLoadedFile = v
@@ -431,8 +443,26 @@ Private Sub Canvas_GotFocus()
     mEditMode = 0
 End Sub
 
-Public Sub ScrollTo(ByVal Pos As Long)
-    Call SetPos(Pos, 0)
+Public Sub scrollTo(ByVal Pos As Long)
+    
+    Dim lines As Long
+    Dim newBottom As Long
+    Dim Max As Long
+    
+    If CurrentPosition < Pos Then 'scrollto will put offset at very bottom of screen..lets adjust it up some..
+        
+        lines = CLng(VisibleLines / 2) 'shoot for display in middle of screen
+        newBottom = Pos + (lines * Columns)
+        Max = FileSize
+        
+        If newBottom > Max Then newBottom = Max
+        SetPos newBottom, 0
+        SelStart = Pos
+        SelLength = 0
+    Else
+        Call SetPos(Pos, 0)
+    End If
+
 End Sub
 
 Private Sub SetPos(Pos As Long, Shift As Integer, Optional CarretPos As Long = 0)
@@ -475,13 +505,6 @@ Private Sub SetPos(Pos As Long, Shift As Integer, Optional CarretPos As Long = 0
     Else
         Call draw
     End If
-    
-    
-        
-    
-    
-    
-
 
 End Sub
 
@@ -712,6 +735,22 @@ Private Sub mnuShowBookMarks2_Click()
     Me.ShowBookMarks
 End Sub
 
+Private Sub mnuStrings_Click()
+    
+    On Error Resume Next
+    
+    Const minLen = 7
+    Dim Ascii() As String
+    Dim uni() As String
+    
+    Ascii() = Search("[\w0-9 /?.\-_=+$\\@!*\(\)#%~`\^&\|\{\}\[\]:;'""<>\,]{" & minLen & ",}")
+    uni() = Search("([\w0-9 /?.\-=+$\\@!\*\(\)#%~`\^&\|\{\}\[\]:;'""<>\,][\x00]){" & minLen & ",}")
+    
+    frmOffsetList.LoadList Me, Ascii
+    frmOffsetList.LoadList Me, uni 'this will append the data...
+    
+End Sub
+
 Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
     If Ambient.UserMode = True Then
         InstallSubclass Me
@@ -820,6 +859,7 @@ Private Sub draw()
     Call DrawCursors
 
     Call Redraw
+    
 End Sub
 
 Private Sub DrawNormal()
@@ -869,6 +909,7 @@ Private Sub DrawNormal()
     
     lines = Canvas.ScaleHeight / mLineHeight
     Pos = mPos
+    mVisibleLines = lines
     
     tmpTime = Timer
     buff() = mFileHandler.DataScreen(Pos, mColumns * (lines + 1))
@@ -1654,6 +1695,9 @@ Public Function LoadByteArray(bArray As Variant, Optional ViewOnly As Boolean = 
     If ReadOnly And UBound(b) + 1 < ChunkSize Then
         'just view in memory only no need to create tempfile,
         'user can reset ChunkSize through ReadChunkSize property to force mem only loading...
+        Set mFileHandler = Nothing
+        Set mFileHandler = New File
+        LockWindowUpdate Me.hWnd
         mFileHandler.LoadFromMemory b()
         vScroll.Value = 1
         Me.Columns = Me.Columns
@@ -1662,6 +1706,7 @@ Public Function LoadByteArray(bArray As Variant, Optional ViewOnly As Boolean = 
         UserControl.vScroll.Value = 0
         mIsDirty = False
         mLoadedFile = Empty
+        LockWindowUpdate 0
         Set mUndoBuffer = New Collection
         Set mBookmarks = New Collection
         LoadByteArray = True
@@ -1712,15 +1757,22 @@ End Function
 Public Function LoadFile(fpath As String, Optional ViewOnly As Boolean = True) As Boolean
     On Error GoTo hell
     
+    Set mFileHandler = Nothing
+    Set mFileHandler = New File
+    
     ReadOnly = ViewOnly
     mFileHandler.Load fpath
     mLoadedFile = fpath
+    
+    LockWindowUpdate Me.hWnd
     vScroll.Value = 1
     Me.Columns = Me.Columns
     Me.SelStart = 0
     Me.SelLength = 0
     UserControl.vScroll.Value = 0
     mIsDirty = False
+    LockWindowUpdate 0
+    
     Set mUndoBuffer = New Collection
     Set mBookmarks = New Collection
     LoadFile = True

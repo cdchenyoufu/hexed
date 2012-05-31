@@ -104,9 +104,9 @@ Private Sub Command1_Click()
     End If
     
     If optBeginning.Value Then
-        finalOffset = offset
+        finalOffset = offset - owner.AdjustBaseOffset 'absolute address to relative...
     Else 'OptCurrent.Value Then
-        finalOffset = owner.SelStart + offset 'can be negative number too...
+        finalOffset = owner.SelStart + offset 'can be negative number too...already a relative value..
     End If
     
     If finalOffset < 0 Then
@@ -119,7 +119,7 @@ Private Sub Command1_Click()
         Exit Sub
     End If
     
-    owner.ScrollTo finalOffset
+    owner.scrollTo finalOffset
     UnLoad Me
     
     Exit Sub
