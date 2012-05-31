@@ -227,6 +227,9 @@ Public ForceMemOnlyLoading As Boolean
 Public UseDefaultRightClickMenu As Boolean
 Public AdjustBaseOffset As Long
 Private mVisibleLines As Long
+Private mClipboard As New CClipboard
+Private Const mClipFormat = "Hexed Binary"
+Private mClipFormatID As Long
 '-------------------
 
 Public Event Dirty()
@@ -805,6 +808,7 @@ End Sub
 Private Sub UserControl_Initialize()
     Dim i As Long
     
+    mClipFormatID = mClipboard.AddFormat(mClipFormat)
     UseDefaultRightClickMenu = True
     ChunkSize = 30000
     Call InitCharset
@@ -1277,6 +1281,11 @@ KeyCount = KeyCount + 1
             SetPos Me.DataLength + 1, Shift
         Case vbKeyInsert: ShowInsert
         Case vbKeyDelete: DoDelete
+        Case vbKeyA:
+                    If Shift = 2 Then 'selectall (should probably be a public function but compat set..
+                        SelStart = 0
+                        SelLength = FileSize + 1
+                    End If
         Case vbKeyB: If Shift = 2 Then DoPasteOver
         Case vbKeyC: If Shift = 2 Then DoCopy
         Case vbKeyF: If Shift = 2 Then ShowFind
@@ -1325,7 +1334,18 @@ Public Sub DoPasteOver()
     
     'overwrite data at current offset with data in clipboard.
     Dim b() As Byte
-    b() = StrConv(Clipboard.GetText, vbFromUnicode, LANG_US)
+    'b() = StrConv(Clipboard.GetText, vbFromUnicode, LANG_US)
+    
+    If mClipboard.IsDataAvailableForFormat(mClipFormatID) <> 0 Then
+        mClipboard.ClipboardOpen Me.hWnd
+        If Not mClipboard.GetBinaryData(mClipFormatID, b()) Then
+            MsgBox "Failed to get binary data from clipboard!"
+        End If
+        mClipboard.ClipboardClose
+    Else
+        b() = StrConv(Clipboard.GetText(vbCFText), vbFromUnicode, LANG_US)
+    End If
+    
     If AryIsEmpty(b) Then Exit Sub
     OverWriteData Me.SelStart, b()
 End Sub
@@ -1339,8 +1359,19 @@ Public Sub DoPaste()
 
     Dim PasteData As String
     Dim b() As Byte
-    PasteData = Clipboard.GetText(vbCFText)
-    b() = StrConv(PasteData, vbFromUnicode, LANG_US)
+    'PasteData = Clipboard.GetText(vbCFText)
+    
+    If mClipboard.IsDataAvailableForFormat(mClipFormatID) <> 0 Then
+        mClipboard.ClipboardOpen Me.hWnd
+        If Not mClipboard.GetBinaryData(mClipFormatID, b()) Then
+            MsgBox "Failed to get binary data from clipboard!"
+        End If
+        mClipboard.ClipboardClose
+    Else
+        PasteData = Clipboard.GetText(vbCFText)
+        b() = StrConv(PasteData, vbFromUnicode, LANG_US)
+    End If
+ 
     mIsDirty = True
     InsertData mSelectedPos, b()
 End Sub
@@ -1544,7 +1575,13 @@ Public Sub CopyData(ByVal Pos As Long, ByVal length As Long)
     End If
     buff = mFileHandler.DataScreen(Pos, length)
     sText = StrConv(buff, vbUnicode, LANG_US)
-    Clipboard.SetText sText, vbCFText
+    'Clipboard.SetText sText, vbCFText
+    
+    mClipboard.ClipboardOpen Me.hWnd
+    mClipboard.ClearClipboard
+    mClipboard.SetBinaryData mClipFormatID, StrConv(sText, vbFromUnicode, LANG_US)
+    mClipboard.ClipboardClose
+
 End Sub
 
 Public Sub ShowInsert()
@@ -1697,6 +1734,7 @@ Public Function LoadByteArray(bArray As Variant, Optional ViewOnly As Boolean = 
         'user can reset ChunkSize through ReadChunkSize property to force mem only loading...
         Set mFileHandler = Nothing
         Set mFileHandler = New File
+        Set mFileHandler.owner = Me
         LockWindowUpdate Me.hWnd
         mFileHandler.LoadFromMemory b()
         vScroll.Value = 1
@@ -1759,6 +1797,7 @@ Public Function LoadFile(fpath As String, Optional ViewOnly As Boolean = True) A
     
     Set mFileHandler = Nothing
     Set mFileHandler = New File
+    Set mFileHandler.owner = Me
     
     ReadOnly = ViewOnly
     mFileHandler.Load fpath

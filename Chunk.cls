@@ -209,7 +209,7 @@ Public Sub InsertData(ByVal Pos As Long, data() As Byte)
     
     '//safety .. bailout if pos is less than 0
     If Pos < 0 Then Exit Sub
-    
+    If UBound(data) = -1 Then Exit Sub
     
     If UBound(mData) = -1 Then
         'if chunk is empty ... replace it with this data

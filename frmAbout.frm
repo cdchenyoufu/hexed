@@ -51,6 +51,7 @@ Sub ShowAbout()
     push r, "http://www.Planet-Source-Code.com/vb/scripts/ShowCode.asp?txtCodeId=34729&lngWId=1\n"
     push r, "dzzie mods:\n\tLoadedFromBytes/String, ReadOnly mode, \n\tForceLoadFromMemOnly, Find, Converted to OCX"
     push r, "\tmisc tweaks/rewires, search/bookmark list form\n"
+    push r, "Clipboard class Copyright Steve P McMahon 9 March 1998 http://www.vbaccelerator.com\n"
     push r, "Big thanks to Rang3r for releasing this, its a great codebase!"
     Dim tmp
     
@@ -69,20 +70,20 @@ Sub ShowHelp()
     
     push r, "Supported commands:\n"
     push r, "Save (Ctrl+S),\n Copy (Ctrl+C),\n Paste (Ctrl+V),\n Delete (DEL),\n Insert (INS),\n Write (Ctrl+B)"
-    push r, "Open (Ctrl+O),\n Undo (Ctrl+Z),\n Find (Ctrl+F),\n Help (F1)"
+    push r, "Open (Ctrl+O),\n Undo (Ctrl+Z),\n Find (Ctrl+F),\n Help (F1)\nSelect All (Ctrl+A)"
     push r, "Toggle BookMark (Shift+F2),\n GoToNextBookMark (F2),\n ShowBookMarks (F3)"
     push r, "Copy Hex Codes (F4),\n About (F5)\n Goto Offset (Ctrl+G)"
     
     push r, "\nYou can copy data from either the hex or char panes."
     push r, "The control can also be set to operate in ReadOnly mode in which case"
     push r, "not all commands will be available."
-    
+    push r, "Developers: Note mem only loads were hacked in and should be left readonly."
     
     Dim tmp
     
     tmp = Join(r, vbCrLf)
     tmp = Replace(tmp, "\n ", vbCrLf)
-     tmp = Replace(tmp, "\n", vbCrLf)
+    tmp = Replace(tmp, "\n", vbCrLf)
     tmp = Replace(tmp, "\t", vbTab)
     
     Text1 = tmp
