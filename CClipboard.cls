@@ -8,7 +8,7 @@ BEGIN
 END
 Attribute VB_Name = "CClipboard"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = False
+Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
@@ -192,6 +192,9 @@ Private Type DROPFILES
 End Type
 Private Const MAX_PATH As Long = 260
 
+Public Sub About()
+    MsgBox "Copyright (c) 2002 vbaccelerator.com", vbInformation
+End Sub
 
 Public Function AddFormat( _
         ByVal sName As String _
@@ -204,6 +207,7 @@ Dim wFormat As Long
         AddFormat = wFormat
     End If
 End Function
+
 Property Get FormatCount() As Integer
 ' Returns the number of formats available on the
 ' clipboard:

@@ -18,8 +18,8 @@ Begin VB.Form frmEditor
       TabStop         =   0   'False
       Top             =   0
       Width           =   8295
-      _ExtentX        =   14631
-      _ExtentY        =   14420
+      _extentx        =   14631
+      _extenty        =   14420
    End
    Begin VB.Menu mnuFile 
       Caption         =   "File"
@@ -35,6 +35,9 @@ Begin VB.Form frmEditor
    End
    Begin VB.Menu mnuEdit 
       Caption         =   "Edit"
+      Begin VB.Menu mnuSelectAll 
+         Caption         =   "SelectAll (Ctrl+A)"
+      End
       Begin VB.Menu mnuCopy 
          Caption         =   "Copy (Ctrl+C)"
       End
@@ -92,6 +95,9 @@ Begin VB.Form frmEditor
       Begin VB.Menu mnuHelp 
          Caption         =   "Help (F1)"
       End
+      Begin VB.Menu mnuSetStringsMinLen 
+         Caption         =   "Strings Min Match Length"
+      End
    End
    Begin VB.Menu mnuPopup 
       Caption         =   "mnuPopup"
@@ -122,6 +128,7 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
+Dim minStringLength As Long
 
 Private Sub Form_Activate()
     On Error Resume Next
@@ -136,6 +143,9 @@ End Sub
 Private Sub Form_Load()
    FormPos Me, True
    Me.Visible = True
+   On Error Resume Next
+   minStringLength = CLng(GetMySetting("minStringLength", 7))
+   If minStringLength < 1 Then minStringLength = 7
 End Sub
 
 Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
@@ -151,6 +161,10 @@ Private Sub Form_Resize()
     On Error Resume Next
     HexEditor.Width = Me.ScaleWidth
     HexEditor.Height = Me.ScaleHeight
+End Sub
+
+Private Sub Form_Unload(Cancel As Integer)
+    SaveMySetting "minStringLength", minStringLength
 End Sub
 
 Private Sub HexEditor_Dirty()
@@ -230,6 +244,16 @@ Private Sub mnuSearch_Click()
      HexEditor.ShowFind
 End Sub
  
+Private Sub mnuSelectAll_Click()
+    HexEditor.SelectAll
+End Sub
+
+Private Sub mnuSetStringsMinLen_Click()
+    On Error Resume Next
+    minStringLength = CLng(InputBox("Set Strings mininimum match length:", , minStringLength))
+    If Err.Number <> 0 Or minStringLength < 1 Then minStringLength = 7
+End Sub
+
 Private Sub mnuShowBookMarks_Click()
     HexEditor.ShowBookMarks
 End Sub
@@ -238,12 +262,11 @@ Private Sub mnuStrings_Click()
     
     On Error Resume Next
     
-    Const minLen = 7
     Dim Ascii() As String
     Dim uni() As String
     
-    Ascii() = HexEditor.Search("[\w0-9 /?.\-_=+$\\@!*\(\)#%~`\^&\|\{\}\[\]:;'""<>\,]{" & minLen & ",}")
-    uni() = HexEditor.Search("([\w0-9 /?.\-=+$\\@!\*\(\)#%~`\^&\|\{\}\[\]:;'""<>\,][\x00]){" & minLen & ",}")
+    Ascii() = HexEditor.Strings(minStringLength)
+    uni() = HexEditor.Strings(minStringLength)
     
     frmOffsetList.LoadList Me, Ascii
     frmOffsetList.LoadList Me, uni 'this will append the data...

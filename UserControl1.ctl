@@ -239,11 +239,11 @@ Public Event Saved()
 
 Private mLoadedFile As String
 
-Friend Property Get CurrentPosition() As Long
+Property Get CurrentPosition() As Long
     CurrentPosition = mPos
 End Property
 
-Friend Property Get VisibleLines() As Long
+Property Get VisibleLines() As Long
         VisibleLines = mVisibleLines
 End Property
 
@@ -1281,11 +1281,7 @@ KeyCount = KeyCount + 1
             SetPos Me.DataLength + 1, Shift
         Case vbKeyInsert: ShowInsert
         Case vbKeyDelete: DoDelete
-        Case vbKeyA:
-                    If Shift = 2 Then 'selectall (should probably be a public function but compat set..
-                        SelStart = 0
-                        SelLength = FileSize + 1
-                    End If
+        Case vbKeyA: If Shift = 2 Then SelectAll
         Case vbKeyB: If Shift = 2 Then DoPasteOver
         Case vbKeyC: If Shift = 2 Then DoCopy
         Case vbKeyF: If Shift = 2 Then ShowFind
@@ -1375,6 +1371,26 @@ Public Sub DoPaste()
     mIsDirty = True
     InsertData mSelectedPos, b()
 End Sub
+
+Public Sub SelectAll()
+     SelStart = 0
+     SelLength = FileSize + 1
+End Sub
+
+Public Function Strings(Optional minLen As Long = 7, Optional unicode As Boolean = False) As String()
+            
+    On Error Resume Next
+    Dim tmp() As String
+    
+    If unicode Then
+        tmp() = Search("([\w0-9 /?.\-=+$\\@!\*\(\)#%~`\^&\|\{\}\[\]:;'""<>\,][\x00]){" & minLen & ",}")
+    Else
+        tmp() = Search("[\w0-9 /?.\-_=+$\\@!*\(\)#%~`\^&\|\{\}\[\]:;'""<>\,]{" & minLen & ",}")
+    End If
+    
+    Strings = tmp()
+    
+End Function
 
 Public Sub DoCut()
     On Error Resume Next
