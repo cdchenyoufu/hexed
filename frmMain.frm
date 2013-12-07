@@ -10,6 +10,7 @@ Begin VB.Form frmEditor
    LinkTopic       =   "Form1"
    ScaleHeight     =   8595
    ScaleWidth      =   11880
+   StartUpPosition =   2  'CenterScreen
    Visible         =   0   'False
    Begin rhexed.HexEd HexEditor 
       Height          =   8175
@@ -18,8 +19,8 @@ Begin VB.Form frmEditor
       TabStop         =   0   'False
       Top             =   0
       Width           =   8295
-      _extentx        =   14631
-      _extenty        =   14420
+      _ExtentX        =   14631
+      _ExtentY        =   14420
    End
    Begin VB.Menu mnuFile 
       Caption         =   "File"

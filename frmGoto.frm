@@ -9,7 +9,7 @@ Begin VB.Form frmGoto
    LinkTopic       =   "Form1"
    ScaleHeight     =   1485
    ScaleWidth      =   4845
-   StartUpPosition =   3  'Windows Default
+   StartUpPosition =   2  'CenterScreen
    Begin VB.Frame Frame1 
       Caption         =   " From "
       Height          =   885
@@ -143,4 +143,8 @@ Private Sub Form_Unload(Cancel As Integer)
     FormPos Me, False, True
     SaveSetting "hexed", "settings", "goto_offset", txtOffset
     SaveSetting "hexed", "settings", "goto_isHex", chkIsHex.Value
+End Sub
+
+Private Sub txtOffset_KeyPress(KeyAscii As Integer)
+    If KeyAscii = 13 Then Command1_Click
 End Sub

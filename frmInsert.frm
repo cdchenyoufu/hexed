@@ -13,7 +13,7 @@ Begin VB.Form frmInsert
    ScaleHeight     =   2565
    ScaleWidth      =   3480
    ShowInTaskbar   =   0   'False
-   StartUpPosition =   1  'CenterOwner
+   StartUpPosition =   2  'CenterScreen
    Begin VB.Frame Frame3 
       Height          =   615
       Left            =   120

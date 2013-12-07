@@ -134,26 +134,38 @@ Begin VB.UserControl HexEd
       Begin VB.Menu mnuSaveAs 
          Caption         =   "Save As"
       End
+      Begin VB.Menu mnuSaveSelAs 
+         Caption         =   "Save Selection As"
+      End
       Begin VB.Menu mnuCopy2 
          Caption         =   "Copy (Ctrl+C)"
       End
       Begin VB.Menu mnuCopyHex2 
          Caption         =   "Copy Hex Codes (F4)"
       End
-      Begin VB.Menu mnuSearch2 
-         Caption         =   "Search (Ctrl+F)"
-      End
       Begin VB.Menu mnuStrings 
          Caption         =   "Strings"
       End
-      Begin VB.Menu mnuGoto2 
-         Caption         =   "Goto (Ctrl+G)"
-      End
-      Begin VB.Menu mnuShowBookMarks2 
-         Caption         =   "Show BookMarks (F3)"
-      End
-      Begin VB.Menu mnuHelp2 
-         Caption         =   "Help (F1)"
+      Begin VB.Menu mnuMore 
+         Caption         =   "More"
+         Begin VB.Menu mnuSelStart 
+            Caption         =   "Beginning of Block"
+         End
+         Begin VB.Menu mnuSelEnd 
+            Caption         =   "End of Block"
+         End
+         Begin VB.Menu mnuSearch2 
+            Caption         =   "Search (Ctrl+F)"
+         End
+         Begin VB.Menu mnuGoto2 
+            Caption         =   "Goto (Ctrl+G)"
+         End
+         Begin VB.Menu mnuShowBookMarks2 
+            Caption         =   "Show BookMarks (F3)"
+         End
+         Begin VB.Menu mnuHelp2 
+            Caption         =   "Help (F1)"
+         End
       End
    End
 End
@@ -191,6 +203,7 @@ Dim mSelectedCursorPos As Long  'carret small pos
 Dim mCanvasOffset As Long       'canvas x offset (canvas scrollbar)
 Dim mAsciiOffset As Long        'ascuu x offset
 Dim mCanvasMaxWidth As Long     'the width that is required to draw a complete line
+Dim mLastClickedOffset As Long  'last offset the user clicked on
 
 '----------------------------------------------------------------GFX
 Dim dcCanvas As VirtualDC       'dc for drawing
@@ -355,6 +368,7 @@ Private Sub Ascii_MouseDown(Button As Integer, Shift As Integer, x As Single, y 
     If yy > Canvas.ScaleHeight / mLineHeight - 2 Then yy = Canvas.ScaleHeight / mLineHeight - 2
     
     Pos = xx + mColumns * yy + mPos
+    mLastClickedOffset = Pos
    ' mHighlightedPos = pos
     If Button = vbLeftButton Then
         
@@ -448,16 +462,20 @@ End Sub
 
 Public Sub scrollTo(ByVal Pos As Long)
     
+    On Error Resume Next
+    
     Dim lines As Long
     Dim newBottom As Long
     Dim Max As Long
-    
+
     If CurrentPosition < Pos Then 'scrollto will put offset at very bottom of screen..lets adjust it up some..
-        
-        lines = CLng(VisibleLines / 2) 'shoot for display in middle of screen
+
+        'lines = CLng(VisibleLines / 2) 'shoot for display in middle of screen
+        lines = VisibleLines - CLng(VisibleLines / 8)
+        'lines = VisibleLines - 2
         newBottom = Pos + (lines * Columns)
         Max = FileSize
-        
+
         If newBottom > Max Then newBottom = Max
         SetPos newBottom, 0
         SelStart = Pos
@@ -573,8 +591,6 @@ Private Sub Canvas_MouseDown(Button As Integer, Shift As Integer, x As Single, y
     x = x + mCanvasOffset * mHexWidth
     
     xx = (x - mHexWidth / 2) / mHexWidth
-    
-    'xx = (x - mHexWidth / 2) / mHexWidth
     yy = (y - mLineHeight / 3) / mLineHeight
     
     If xx < 0 Then xx = 0
@@ -582,8 +598,8 @@ Private Sub Canvas_MouseDown(Button As Integer, Shift As Integer, x As Single, y
     If xx > mColumns - 1 Then xx = mColumns - 1
     If yy > Canvas.ScaleHeight / mLineHeight - 2 Then yy = Canvas.ScaleHeight / mLineHeight - 2
     
-    
     Pos = xx + mColumns * yy + mPos
+    mLastClickedOffset = Pos
    ' mHighlightedPos = pos
     If Button = vbLeftButton Then
         mSelectedPos = Pos
@@ -727,11 +743,70 @@ Private Sub mnuHelp2_Click()
 End Sub
 
 Private Sub mnuSaveAs_Click()
-    Me.SaveAs
+   Me.SaveAs
+End Sub
+
+Private Sub mnuSaveSelAs_Click()
+    
+    Dim dlg As New clsCmnDlg2
+    Dim SaveAs As String
+    Dim b() As Byte
+    Dim f As Long
+    Dim failed As Boolean
+    
+    failed = True
+    If SelLength = 0 Then Exit Sub
+    
+    SaveAs = dlg.SaveDialog(AllFiles, , "Save selection as", , Me.hWnd, "")
+    If Len(SaveAs) = 0 Then Exit Sub
+    
+    CopyData Me.SelStart, Me.SelLength
+
+    If mClipboard.IsDataAvailableForFormat(mClipFormatID) <> 0 Then
+        mClipboard.ClipboardOpen Me.hWnd
+        If mClipboard.GetBinaryData(mClipFormatID, b()) Then failed = False
+        mClipboard.ClipboardClose
+    End If
+    
+    If failed Then
+        MsgBox "Failed to get binary data from clipboard."
+    End If
+    
+    On Error Resume Next
+    Kill SaveAs
+    f = FreeFile
+    Open SaveAs For Binary As f
+    Put f, , b()
+    Close f
+    
 End Sub
 
 Private Sub mnuSearch2_Click()
     Me.ShowFind
+End Sub
+
+Private Sub mnuSelEnd_Click()
+    On Error Resume Next
+
+    If mLastClickedOffset > Me.SelStart Then
+        Me.SelLength = mLastClickedOffset - Me.SelStart + 1
+    Else
+        Me.SelLength = 0
+        Me.SelStart = mLastClickedOffset
+    End If
+        
+End Sub
+
+Private Sub mnuSelStart_Click()
+    On Error Resume Next
+    Dim newSelLen As Long, selEnd As Long
+
+    selEnd = Me.SelStart + Me.SelLength
+    Me.SelStart = mLastClickedOffset
+    newSelLen = selEnd - mLastClickedOffset
+    If newSelLen < 1 Then newSelLen = 0
+    Me.SelLength = newSelLen
+    
 End Sub
 
 Private Sub mnuShowBookMarks2_Click()

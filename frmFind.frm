@@ -9,7 +9,7 @@ Begin VB.Form frmFind
    LinkTopic       =   "Form1"
    ScaleHeight     =   1455
    ScaleWidth      =   5850
-   StartUpPosition =   3  'Windows Default
+   StartUpPosition =   2  'CenterScreen
    Begin VB.CheckBox chkSensitive 
       Caption         =   "Case Sensitive"
       Height          =   345

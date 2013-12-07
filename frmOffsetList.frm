@@ -10,7 +10,7 @@ Begin VB.Form frmOffsetList
    LinkTopic       =   "Form1"
    ScaleHeight     =   3975
    ScaleWidth      =   7245
-   StartUpPosition =   3  'Windows Default
+   StartUpPosition =   2  'CenterScreen
    Begin MSComctlLib.ListView lv 
       Height          =   3795
       Left            =   60
@@ -156,13 +156,14 @@ End Sub
 Private Sub Form_Load()
     FormPos Me, True
     SetTopMost Me
+    Form_Resize
 End Sub
 
 Private Sub Form_Unload(Cancel As Integer)
     FormPos Me, True, True
 End Sub
 
-Private Sub lv_MouseUp(Button As Integer, Shift As Integer, x As Single, Y As Single)
+Private Sub lv_MouseUp(Button As Integer, Shift As Integer, x As Single, y As Single)
     If Button = 2 Then
         mnuEditDescription.Visible = (vMode = bookMarkList)
         PopupMenu mnuPopup
