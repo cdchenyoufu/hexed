@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{71532E87-B06E-431D-AC3A-686170A406ED}#7.0#0"; "hexed.ocx"
+Object = "{9A143468-B450-48DD-930D-925078198E4D}#1.0#0"; "hexed.ocx"
 Begin VB.Form Form1 
    Caption         =   "Form1"
    ClientHeight    =   7380
@@ -10,22 +10,22 @@ Begin VB.Form Form1
    ScaleHeight     =   7380
    ScaleWidth      =   11880
    StartUpPosition =   3  'Windows Default
+   Begin rhexed.HexEd HexEd1 
+      Height          =   4875
+      Left            =   900
+      TabIndex        =   1
+      Top             =   585
+      Width           =   8385
+      _ExtentX        =   14790
+      _ExtentY        =   8599
+   End
    Begin VB.CommandButton Command1 
       Caption         =   "Command1"
       Height          =   435
       Left            =   10470
-      TabIndex        =   1
+      TabIndex        =   0
       Top             =   180
       Width           =   1125
-   End
-   Begin rhexed.HexEd HexEd1 
-      Height          =   5385
-      Left            =   240
-      TabIndex        =   0
-      Top             =   120
-      Width           =   9645
-      _ExtentX        =   17013
-      _ExtentY        =   9499
    End
 End
 Attribute VB_Name = "Form1"
@@ -42,4 +42,6 @@ Private Sub Command1_Click()
     
     
 End Sub
+
+ 
 

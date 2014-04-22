@@ -176,6 +176,8 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
 
+Implements iSubclass
+
 Private Declare Function GetTempFileName Lib "kernel32" _
  Alias "GetTempFileNameA" (ByVal lpszPath As String, _
  ByVal lpPrefixString As String, ByVal wUnique As Long, _
@@ -183,7 +185,8 @@ Private Declare Function GetTempFileName Lib "kernel32" _
 
 Private Declare Function LockWindowUpdate Lib "user32" (ByVal hwndLock As Long) As Long
 
-
+Private subclass As cSubclass
+Attribute subclass.VB_VarHelpID = -1
 
 Dim CharSet(255) As Byte        'charset filter
 Dim HexLookup(255) As String
@@ -279,7 +282,7 @@ End Property
 Public Function ShowOpen(Optional initDir As String, Optional ViewOnly As Boolean = False) As Boolean
     Dim dlg As New clsCmnDlg2
     Dim fpath As String
-    fpath = dlg.OpenDialog(AllFiles, initDir, "Open file", UserControl.hWnd)
+    fpath = dlg.OpenDialog(AllFiles, initDir, "Open file", UserControl.hwnd)
     If Len(fpath) = 0 Then Exit Function
     ShowOpen = Me.LoadFile(fpath, ViewOnly)
 End Function
@@ -725,6 +728,8 @@ End Sub
 
 
 
+
+
 Private Sub mnuCopy2_Click()
     Me.DoCopy
 End Sub
@@ -757,13 +762,13 @@ Private Sub mnuSaveSelAs_Click()
     failed = True
     If SelLength = 0 Then Exit Sub
     
-    SaveAs = dlg.SaveDialog(AllFiles, , "Save selection as", , Me.hWnd, "")
+    SaveAs = dlg.SaveDialog(AllFiles, , "Save selection as", , Me.hwnd, "")
     If Len(SaveAs) = 0 Then Exit Sub
     
     CopyData Me.SelStart, Me.SelLength
 
     If mClipboard.IsDataAvailableForFormat(mClipFormatID) <> 0 Then
-        mClipboard.ClipboardOpen Me.hWnd
+        mClipboard.ClipboardOpen Me.hwnd
         If mClipboard.GetBinaryData(mClipFormatID, b()) Then failed = False
         mClipboard.ClipboardClose
     End If
@@ -829,11 +834,11 @@ Private Sub mnuStrings_Click()
     
 End Sub
 
-Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
-    If Ambient.UserMode = True Then
-        InstallSubclass Me
-    End If
-End Sub
+'Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
+'    If Ambient.UserMode = True Then
+'        InstallSubclass Me
+'    End If
+'End Sub
 
 Private Sub vScroll_Change()
     
@@ -913,6 +918,16 @@ Private Sub UserControl_Initialize()
     mLinenumberSize = 10
     Me.Columns = 16
 
+    'switched over to use Paul Caton's subclassing code - extremely stable..
+    Set subclass = New cSubclass
+    subclass.subclass Me.hwnd, Me
+    subclass.subclass Me.hWndCanvas, Me
+    subclass.subclass Me.hWndAscii, Me
+    
+    subclass.AddMsg Me.hwnd, wm_MouseWheel
+    subclass.AddMsg Me.hWndCanvas, wm_MouseWheel
+    subclass.AddMsg Me.hWndAscii, wm_MouseWheel
+    
 End Sub
 
 Private Sub RefreshSettings()
@@ -1351,6 +1366,7 @@ KeyCount = KeyCount + 1
             Clipboard.Clear
             Clipboard.SetText Me.SelTextAsHexCodes
         Case vbKeyF5: ShowAbout
+        Case vbKeyF6: mnuStrings_Click
         Case vbKeyEnd
             KeyCode = 0
             SetPos Me.DataLength + 1, Shift
@@ -1408,7 +1424,7 @@ Public Sub DoPasteOver()
     'b() = StrConv(Clipboard.GetText, vbFromUnicode, LANG_US)
     
     If mClipboard.IsDataAvailableForFormat(mClipFormatID) <> 0 Then
-        mClipboard.ClipboardOpen Me.hWnd
+        mClipboard.ClipboardOpen Me.hwnd
         If Not mClipboard.GetBinaryData(mClipFormatID, b()) Then
             MsgBox "Failed to get binary data from clipboard!"
         End If
@@ -1433,7 +1449,7 @@ Public Sub DoPaste()
     'PasteData = Clipboard.GetText(vbCFText)
     
     If mClipboard.IsDataAvailableForFormat(mClipFormatID) <> 0 Then
-        mClipboard.ClipboardOpen Me.hWnd
+        mClipboard.ClipboardOpen Me.hwnd
         If Not mClipboard.GetBinaryData(mClipFormatID, b()) Then
             MsgBox "Failed to get binary data from clipboard!"
         End If
@@ -1540,7 +1556,9 @@ Private Sub UserControl_Terminate()
     dcCanvas.Destroy
     dcMargin.Destroy
     
-    UnInstallSubclass Me
+    subclass.UnSubAll
+    Set subclass = Nothing
+    'UnInstallSubclass Me
     
 End Sub
 
@@ -1657,21 +1675,43 @@ Public Property Get SelTextAsHexCodes(Optional prefix As String = Empty) As Stri
 End Property
 
 Public Sub CopyData(ByVal Pos As Long, ByVal length As Long)
+    
+    Dim buff() As Byte, sText As String, b As Byte
+    Dim isBinary As Boolean, i As Long
+    
     Clipboard.Clear
-    Dim buff() As Byte, sText As String
     If length = 0 Then Exit Sub
+    
     If length < 0 Then
         Pos = Pos + length
         length = -length
     End If
-    buff = mFileHandler.DataScreen(Pos, length)
-    sText = StrConv(buff, vbUnicode, LANG_US)
-    'Clipboard.SetText sText, vbCFText
     
-    mClipboard.ClipboardOpen Me.hWnd
-    mClipboard.ClearClipboard
-    mClipboard.SetBinaryData mClipFormatID, StrConv(sText, vbFromUnicode, LANG_US)
-    mClipboard.ClipboardClose
+    buff = mFileHandler.DataScreen(Pos, length)
+    
+    'if the data contains binary copy as binary, else copy as text.. -dz 4.21.14
+    For i = 0 To UBound(buff)
+        b = buff(i)
+        
+        If b = 9 Or b = 10 Or b = 13 Then
+            'tab, cr, lf are ok..
+        ElseIf b >= &H20 And b <= &H7E Then
+            'its a printable character and is ok..
+        Else
+            isBinary = True
+            Exit For
+        End If
+    Next
+    
+    If isBinary Then
+        mClipboard.ClipboardOpen Me.hwnd
+        mClipboard.ClearClipboard
+        mClipboard.SetBinaryData mClipFormatID, buff
+        mClipboard.ClipboardClose
+    Else
+         sText = StrConv(buff, vbUnicode, LANG_US)
+         Clipboard.SetText sText
+    End If
 
 End Sub
 
@@ -1729,7 +1769,7 @@ Public Sub OverWriteData(ByVal Pos As Long, data() As Byte)
         'MsgBox "File was opened in readonly mode"
         Exit Sub
     End If
-    LockWindowUpdate Me.hWnd
+    LockWindowUpdate Me.hwnd
     DeleteData Pos, UBound(data) + 1
     InsertData Pos, data()
     LockWindowUpdate 0
@@ -1826,7 +1866,7 @@ Public Function LoadByteArray(bArray As Variant, Optional ViewOnly As Boolean = 
         Set mFileHandler = Nothing
         Set mFileHandler = New File
         Set mFileHandler.owner = Me
-        LockWindowUpdate Me.hWnd
+        LockWindowUpdate Me.hwnd
         mFileHandler.LoadFromMemory b()
         vScroll.Value = 1
         Me.Columns = Me.Columns
@@ -1894,7 +1934,7 @@ Public Function LoadFile(fpath As String, Optional ViewOnly As Boolean = True) A
     mFileHandler.Load fpath
     mLoadedFile = fpath
     
-    LockWindowUpdate Me.hWnd
+    LockWindowUpdate Me.hwnd
     vScroll.Value = 1
     Me.Columns = Me.Columns
     Me.SelStart = 0
@@ -2049,16 +2089,16 @@ Public Property Let AsciiBGColor(ByVal vData As Long)
 End Property
 
 
-Public Property Get hWnd() As Long
-    hWnd = UserControl.hWnd
+Public Property Get hwnd() As Long
+    hwnd = UserControl.hwnd
 End Property
 
 Public Property Get hWndCanvas() As Long
-    hWndCanvas = Canvas.hWnd
+    hWndCanvas = Canvas.hwnd
 End Property
 
 Public Property Get hWndAscii() As Long
-    hWndAscii = Ascii.hWnd
+    hWndAscii = Ascii.hwnd
 End Property
 
 
@@ -2122,3 +2162,15 @@ Public Sub GotoNextBookmark()
     mBookmarkPos = mBookmarkPos + 1
     Err.Clear
 End Sub
+
+'only message hooked is wm_MouseWheel
+Private Sub iSubclass_WndProc(ByVal bBefore As Boolean, bHandled As Boolean, lReturn As Long, ByVal lng_hWnd As Long, ByVal uMsg As Long, ByVal wParam As Long, ByVal lParam As Long)
+    On Error Resume Next
+    Dim high As Long, low As Long
+    high = (wParam And &HFFFF0000) \ &H10000
+    low = wParam And &HFFFF&
+    high = high / 120
+    Me.Scroll high
+End Sub
+
+

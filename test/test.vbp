@@ -1,7 +1,7 @@
 Type=Exe
 Form=frmTest.frm
 Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#C:\WINDOWS\system32\stdole2.tlb#OLE Automation
-Object={71532E87-B06E-431D-AC3A-686170A406ED}#7.2#0; hexed2.ocx
+Object={9A143468-B450-48DD-930D-925078198E4D}#1.1#0; hexed.ocx
 IconForm="Form1"
 Startup="Form1"
 Command32=""
