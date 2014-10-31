@@ -142,9 +142,9 @@ Private Sub Form_GotFocus()
 End Sub
 
 Private Sub Form_Load()
+   On Error Resume Next
    FormPos Me, True
    Me.Visible = True
-   On Error Resume Next
    minStringLength = CLng(GetMySetting("minStringLength", 7))
    If minStringLength < 1 Then minStringLength = 7
 End Sub
