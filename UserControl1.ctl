@@ -176,6 +176,8 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
 
+'no way to query what file is currently loaded? consumer is expected to keep track i guess..
+
 Implements iSubclass
 
 Private Declare Function GetTempFileName Lib "kernel32" _
@@ -1971,6 +1973,10 @@ Public Property Get IsDirty() As Boolean
 End Property
 
 Public Sub SaveAs(Optional fpath As String = Empty, Optional defaultfName As String)
+    
+    If Len(defaultfName) = 0 And AdjustBaseOffset <> 0 Then
+            defaultfName = LCase(Hex(AdjustBaseOffset)) & ".bin"
+    End If
     
     If Len(defaultfName) = 0 And Len(LoadedFile) > 0 Then
         defaultfName = FileNameFromPath(LoadedFile)

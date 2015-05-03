@@ -102,7 +102,6 @@ Begin VB.Form frmEditor
    End
    Begin VB.Menu mnuPopup 
       Caption         =   "mnuPopup"
-      Visible         =   0   'False
       Begin VB.Menu mnuCopy2 
          Caption         =   "Copy (Ctrl+C)"
       End
@@ -143,6 +142,7 @@ End Sub
 
 Private Sub Form_Load()
    On Error Resume Next
+   mnuPopup.Visible = False
    FormPos Me, True
    Me.Visible = True
    minStringLength = CLng(GetMySetting("minStringLength", 7))
@@ -238,7 +238,13 @@ Private Sub mnuSave_Click()
 End Sub
 
 Private Sub mnuSaveAs_Click()
-    HexEditor.SaveAs
+    With HexEditor
+        If .AdjustBaseOffset <> 0 Then
+            .SaveAs , LCase(Hex(.AdjustBaseOffset)) & ".bin"
+        Else
+            .SaveAs
+        End If
+    End With
 End Sub
 
 Private Sub mnuSearch_Click()
