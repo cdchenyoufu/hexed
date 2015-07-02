@@ -148,6 +148,9 @@ Begin VB.UserControl HexEd
       End
       Begin VB.Menu mnuMore 
          Caption         =   "More"
+         Begin VB.Menu mnuFillBlock 
+            Caption         =   "Fill Block"
+         End
          Begin VB.Menu mnuSelStart 
             Caption         =   "Beginning of Block"
          End
@@ -741,6 +744,39 @@ Private Sub mnuCopyHex2_Click()
     Clipboard.SetText Me.SelTextAsHexCodes
 End Sub
 
+Private Sub mnuFillBlock_Click()
+    On Error Resume Next
+    Dim d, b As Byte, bb() As Byte, i As Long
+    Dim def As String
+    
+    If Me.SelLength = 0 Then Exit Sub
+    
+    If Me.ReadOnly Then
+        MsgBox "Can not fill block in read only mode."
+        Exit Sub
+    End If
+    
+    def = GetMySetting("lastHexCode", "CC")
+    d = InputBox("Enter hex byte value to fill selection with", , def)
+    If Len(d) = 0 Then Exit Sub
+    
+    b = CByte(CInt("&h" & d))
+    If Err.Number <> 0 Then
+        MsgBox "Could not convert input from hex to byte", vbInformation
+        Exit Sub
+    End If
+    
+    SaveMySetting "lastHexCode", def
+    
+    ReDim bb(Me.SelLength - 1)
+    For i = 0 To Me.SelLength
+        bb(i) = b
+    Next
+    
+    OverWriteData Me.SelStart, bb()
+    
+End Sub
+
 Private Sub mnuGoto2_Click()
     Me.ShowGoto
 End Sub
@@ -794,7 +830,7 @@ End Sub
 
 Private Sub mnuSelEnd_Click()
     On Error Resume Next
-
+    
     If mLastClickedOffset > Me.SelStart Then
         Me.SelLength = mLastClickedOffset - Me.SelStart + 1
     Else
@@ -807,12 +843,17 @@ End Sub
 Private Sub mnuSelStart_Click()
     On Error Resume Next
     Dim newSelLen As Long, selEnd As Long
-
-    selEnd = Me.SelStart + Me.SelLength
-    Me.SelStart = mLastClickedOffset
-    newSelLen = selEnd - mLastClickedOffset
-    If newSelLen < 1 Then newSelLen = 0
-    Me.SelLength = newSelLen
+    
+    If Me.SelLength = 0 Then
+        Me.SelStart = mLastClickedOffset
+        Me.SelLength = 1
+    Else
+        selEnd = Me.SelStart + Me.SelLength
+        Me.SelStart = mLastClickedOffset
+        newSelLen = selEnd - mLastClickedOffset
+        If newSelLen < 1 Then newSelLen = 0
+        Me.SelLength = newSelLen
+    End If
     
 End Sub
 
@@ -1764,6 +1805,7 @@ Public Sub InsertData(ByVal Pos As Long, data() As Byte)
     AddToUndobuffer UB
     mFileHandler.InsertData Pos, data
     Columns = Columns
+    mIsDirty = True
 End Sub
 
 Public Sub OverWriteData(ByVal Pos As Long, data() As Byte)
@@ -1775,6 +1817,7 @@ Public Sub OverWriteData(ByVal Pos As Long, data() As Byte)
     DeleteData Pos, UBound(data) + 1
     InsertData Pos, data()
     LockWindowUpdate 0
+    mIsDirty = True
 End Sub
 
 Public Sub DeleteData(ByVal Pos As Long, ByVal length As Long)
@@ -1796,6 +1839,7 @@ Public Sub DeleteData(ByVal Pos As Long, ByVal length As Long)
     mFileHandler.DeleteData Pos, length
     SetPos Pos, 0
     Columns = Columns
+     mIsDirty = True
 End Sub
 
 Public Property Get SelStart() As Long

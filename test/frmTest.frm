@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{9A143468-B450-48DD-930D-925078198E4D}#1.0#0"; "hexed.ocx"
+Object = "{9A143468-B450-48DD-930D-925078198E4D}#1.1#0"; "hexed.ocx"
 Begin VB.Form Form1 
    Caption         =   "Form1"
    ClientHeight    =   7380
@@ -34,6 +34,9 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Private Sub Command1_Click()
+    
+    HexEd1.LoadString "test", False
+    
     Dim edit As New CHexEditor
     
     'edit.GetEditor.LoadFile "c:\_jbig2.data", False

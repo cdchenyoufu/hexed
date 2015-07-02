@@ -2,7 +2,7 @@ Attribute VB_Name = "modShared"
 Option Explicit
 
 Declare Function GetTempPath Lib "kernel32" Alias "GetTempPathA" (ByVal nBufferLength As Long, ByVal lpBuffer As String) As Long
-Private Declare Sub SetWindowPos Lib "user32" (ByVal hWnd As Long, ByVal _
+Private Declare Sub SetWindowPos Lib "user32" (ByVal hwnd As Long, ByVal _
     hWndInsertAfter As Long, ByVal x As Long, ByVal y As Long, ByVal cx _
     As Long, ByVal cy As Long, ByVal wFlags As Long)
     
@@ -17,7 +17,7 @@ Public ChunkSize As Long
 Public Function SetTopMost(f As Form, Optional onTop As Boolean = True)
     Dim flag As Long
     flag = IIf(onTop, HWND_TOPMOST, HWND_NOTOPMOST)
-    SetWindowPos f.hWnd, flag, f.Left / 15, f.Top / 15, f.Width / 15, f.Height / 15, SWP_SHOWWINDOW
+    SetWindowPos f.hwnd, flag, f.Left / 15, f.Top / 15, f.Width / 15, f.Height / 15, SWP_SHOWWINDOW
 End Function
 
 Public Function FileExists(path) As Boolean
@@ -113,7 +113,7 @@ End Function
 
 Function toHexString(ByVal data As String, doUnicode As Boolean, Optional prefix As String = "\x") As String
     Dim b() As Byte
-    Dim i As Long, r As String
+    Dim i As Long, r() As String
     
     If Len(data) = 0 Then Exit Function
     
@@ -124,10 +124,10 @@ Function toHexString(ByVal data As String, doUnicode As Boolean, Optional prefix
     b() = StrConv(data, vbFromUnicode, LANG_US)
     
     For i = 0 To UBound(b)
-        r = r & prefix & shex(Hex(b(i)))
+        push r, prefix & shex(Hex(b(i)))
     Next
     
-    toHexString = r
+    toHexString = Join(r, "")
     
 End Function
 
