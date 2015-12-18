@@ -419,7 +419,7 @@ Private Sub txtSearch_Change()
     lvFiltered.Visible = True
     
     For Each li In lv.ListItems
-        If InStr(1, li.SubItems(1), txtSearch, vbTextCompare) > 0 Then
+        If InStr(1, Replace(li.SubItems(1), ".", ""), txtSearch, vbTextCompare) > 0 Then
             copyLiToFiltered li
         End If
     Next
