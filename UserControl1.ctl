@@ -809,10 +809,13 @@ Private Sub mnuSaveSelAs_Click()
         mClipboard.ClipboardOpen Me.hwnd
         If mClipboard.GetBinaryData(mClipFormatID, b()) Then failed = False
         mClipboard.ClipboardClose
-    End If
-    
-    If failed Then
-        MsgBox "Failed to get binary data from clipboard."
+        If failed Then
+            MsgBox "Failed to get binary data from clipboard."
+            Exit Sub
+        End If
+    Else
+        'text data is copied normally must be that...
+        b() = StrConv(Clipboard.GetText, vbFromUnicode, LANG_US)
     End If
     
     On Error Resume Next
